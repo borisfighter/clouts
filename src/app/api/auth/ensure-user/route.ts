@@ -6,9 +6,11 @@ export async function POST() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: existing } = await supabase.from('users').select('id').eq('id', user.id).single()
-  if (!existing) {
-    await supabase.from('users').insert({ id: user.id, email: user.email!, plan: 'free' })
-  }
-  return NextResponse.json({ ok: true })
+  // Upsert user row in public.users
+  const { error } = await supabase.from('users').upsert(
+    { id: user.id, email: user.email! },
+    { onConflict: 'id', ignoreDuplicates: true }
+  )
+  
+  return NextResponse.json({ ok: true, userId: user.id })
 }

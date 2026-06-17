@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createServerClient } from '@supabase/ssr'
 import { sendWelcomeEmail } from '@/lib/email'
 
 export async function GET(request: Request) {
@@ -13,11 +12,20 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.exchangeCodeForSession(code)
 
     if (user) {
-      // Always upsert user row — works even without service role key
+      // Ensure user row exists
       const { data: existing } = await supabase.from('users').select('id').eq('id', user.id).single()
+
       if (!existing) {
-        await supabase.from('users').insert({ id: user.id, email: user.email!, plan: 'free' })
+        // New user — create row + send welcome email + redirect to settings
+        await supabase.from('users').insert({ id: user.id, email: user.email! })
         try { await sendWelcomeEmail(user.email!, user.user_metadata?.full_name) } catch {}
+        return NextResponse.redirect(`${origin}/dashboard/settings?welcome=1`)
+      }
+
+      // Returning user — check if they have a brand
+      const { count } = await supabase.from('brands').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+      if (!count || count === 0) {
+        return NextResponse.redirect(`${origin}/dashboard/settings?welcome=1`)
       }
     }
   }
