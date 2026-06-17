@@ -1,95 +1,80 @@
-import { TrendingUp, Eye, MessageSquare, ArrowUpRight } from 'lucide-react'
+import { Radio, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 
 const engines = [
-  { name: 'ChatGPT',    score: 96, mentions: 1240, trend: '+12%', color: 'text-emerald-400' },
-  { name: 'Perplexity', score: 91, mentions: 890,  trend: '+8%',  color: 'text-emerald-400' },
-  { name: 'Gemini',     score: 88, mentions: 760,  trend: '+5%',  color: 'text-emerald-400' },
-  { name: 'Claude',     score: 82, mentions: 540,  trend: '+3%',  color: 'text-emerald-400' },
-  { name: 'Grok',       score: 74, mentions: 310,  trend: '-2%',  color: 'text-red-400' },
-  { name: 'Copilot',    score: 71, mentions: 280,  trend: '+1%',  color: 'text-emerald-400' },
-]
-
-const recentMentions = [
-  { engine: 'ChatGPT',    text: '"Clouts is the leading platform for AI brand visibility tracking..."',     time: '2m ago',  score: 96 },
-  { engine: 'Perplexity', text: '"For AEO tracking, Clouts offers real-time engine insights and..."',      time: '8m ago',  score: 91 },
-  { engine: 'Gemini',     text: '"Brands looking to monitor AI search should consider Clouts, which..."',  time: '15m ago', score: 88 },
-  { engine: 'Claude',     text: '"Clouts provides comprehensive AI visibility monitoring across..."',       time: '23m ago', score: 82 },
-  { engine: 'ChatGPT',    text: '"When comparing AEO tools, Clouts stands out for its real-time..."',      time: '41m ago', score: 94 },
+  { name: 'ChatGPT',    score: null, trend: null, mentions: 0 },
+  { name: 'Perplexity', score: null, trend: null, mentions: 0 },
+  { name: 'Gemini',     score: null, trend: null, mentions: 0 },
+  { name: 'Claude',     score: null, trend: null, mentions: 0 },
+  { name: 'Grok',       score: null, trend: null, mentions: 0 },
+  { name: 'Copilot',    score: null, trend: null, mentions: 0 },
+  { name: 'Meta AI',    score: null, trend: null, mentions: 0 },
+  { name: 'Google AIO', score: null, trend: null, mentions: 0 },
 ]
 
 export default function VisibilityPage() {
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-bold text-white">AI Visibility</h1>
-          <p className="text-xs text-white/40 mt-0.5">clouts.com · Last 30 days</p>
+          <h1 className="text-2xl font-black text-white tracking-tight">AI Visibility</h1>
+          <p className="mt-1 text-sm text-white/40">How AI engines talk about your brand</p>
         </div>
-        <button className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500 transition-colors">
-          <ArrowUpRight size={13} />
-          Run Scrape
-        </button>
+        <div className="flex items-center gap-2">
+          <select className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs text-white/60 focus:outline-none">
+            <option>Last 30 days</option>
+            <option>Last 7 days</option>
+            <option>Last 90 days</option>
+          </select>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Summary stats */}
+      <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Mention Rate',    value: '84%',   icon: Eye,           up: true  },
-          { label: 'AI Impressions',  value: '2.4M',  icon: TrendingUp,    up: true  },
-          { label: 'Avg Score',       value: '83.7',  icon: MessageSquare, up: true  },
-          { label: 'vs Last Month',   value: '+31%',  icon: ArrowUpRight,  up: true  },
-        ].map(({ label, value, icon: Icon, up }) => (
-          <div key={label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] text-white/40">{label}</p>
-              <Icon size={13} className="text-white/20" />
-            </div>
-            <p className={`text-xl font-bold ${up ? 'text-emerald-400' : 'text-white'}`}>{value}</p>
+          { label: 'Overall mention rate', value: '—' },
+          { label: 'Total AI impressions',  value: '—' },
+          { label: 'Avg visibility score',  value: '—' },
+        ].map(({ label, value }) => (
+          <div key={label} className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-4">
+            <p className="text-xs text-white/30 mb-1">{label}</p>
+            <p className="text-2xl font-black text-white">{value}</p>
           </div>
         ))}
       </div>
 
-      {/* Engine scores */}
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02]">
-        <div className="border-b border-white/[0.06] px-5 py-3">
-          <h2 className="text-xs font-semibold text-white/70">Engine Breakdown</h2>
+      {/* Engine breakdown */}
+      <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+        <div className="border-b border-white/[0.07] px-5 py-3 flex items-center gap-2">
+          <Radio size={14} className="text-violet-400" />
+          <span className="text-sm font-semibold text-white">Engine breakdown</span>
+          <span className="ml-auto text-xs text-white/20">Add a brand to see data</span>
         </div>
         <div className="divide-y divide-white/[0.04]">
-          {engines.map(({ name, score, mentions, trend, color }) => (
-            <div key={name} className="flex items-center gap-4 px-5 py-3">
-              <span className="w-24 text-xs font-medium text-white/70">{name}</span>
+          {engines.map(({ name, score, mentions }) => (
+            <div key={name} className="flex items-center gap-4 px-5 py-3.5">
+              <div className="w-28 text-sm font-medium text-white/70">{name}</div>
               <div className="flex-1">
-                <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-                  <div
-                    className="h-full rounded-full bg-violet-500"
-                    style={{ width: `${score}%` }}
-                  />
+                <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
+                  <div className="h-full rounded-full bg-violet-500/30" style={{ width: '0%' }} />
                 </div>
               </div>
-              <span className="w-8 text-right text-xs font-bold text-white">{score}</span>
-              <span className="w-16 text-right text-xs text-white/30">{mentions.toLocaleString()}</span>
-              <span className={`w-12 text-right text-xs font-medium ${color}`}>{trend}</span>
+              <div className="w-10 text-right text-sm font-bold text-white/30">—</div>
+              <div className="w-20 text-right text-xs text-white/20">0 mentions</div>
+              <Minus size={12} className="text-white/20" />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Recent mentions */}
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02]">
-        <div className="border-b border-white/[0.06] px-5 py-3">
-          <h2 className="text-xs font-semibold text-white/70">Recent Mentions</h2>
-        </div>
-        <div className="divide-y divide-white/[0.04]">
-          {recentMentions.map(({ engine, text, time, score }, i) => (
-            <div key={i} className="flex items-start gap-3 px-5 py-3">
-              <span className="mt-0.5 min-w-[72px] text-[10px] font-bold text-violet-300">{engine}</span>
-              <p className="flex-1 text-xs text-white/40 line-clamp-1">{text}</p>
-              <span className="text-[10px] text-white/20 whitespace-nowrap">{time}</span>
-              <span className="text-[10px] font-bold text-emerald-400">{score}</span>
-            </div>
-          ))}
-        </div>
+      {/* Empty state */}
+      <div className="rounded-2xl border border-dashed border-white/[0.10] p-12 text-center">
+        <Radio size={32} className="mx-auto mb-3 text-white/10" />
+        <p className="text-sm font-medium text-white/30">No brand configured yet</p>
+        <p className="text-xs text-white/20 mt-1 mb-4">Add your brand domain in Settings to start tracking AI mentions</p>
+        <a href="/dashboard/settings"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 transition-colors">
+          Add brand
+        </a>
       </div>
     </div>
   )
