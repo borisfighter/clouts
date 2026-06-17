@@ -1,11 +1,8 @@
-import { drizzle } from 'drizzle-orm/postgres-js'
-import postgres from 'postgres'
-import * as schema from './schema'
+// Database client - configure with your Supabase DATABASE_URL
+// import { drizzle } from 'drizzle-orm/postgres-js'
+// import postgres from 'postgres'
+// import * as schema from './schema'
+// const client = postgres(process.env.DATABASE_URL!, { prepare: false })
+// export const db = drizzle(client, { schema })
 
-const connectionString = process.env.DATABASE_URL!
-
-// Disable prefetch for Supabase transaction pooler (required on Vercel)
-const client = postgres(connectionString, { prepare: false })
-
-export const db = drizzle(client, { schema })
-export * from './schema'
+export const db = null // placeholder until DATABASE_URL is configured
