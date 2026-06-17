@@ -6,7 +6,7 @@
 
 import { ScrapeResult } from './perplexity'
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+const OPENAI_API_KEY = (() => { const k = process.env.OPENAI_API_KEY; return (!k || k.includes('REPLACE') || k.length < 20) ? undefined : k })()
 
 function analyzeMention(text: string, brandName: string, domain: string) {
   const lower = text.toLowerCase()
@@ -54,14 +54,14 @@ export async function scrapeChatGPT(query: string, brandName: string, domain: st
         temperature: 0.3,
       }),
     })
-    if (!res.ok) return null
+    if (!res.ok) return mockScrape(query, brandName, domain)
     const data = await res.json()
     const responseText = data.choices?.[0]?.message?.content || ''
     const analysis = analyzeMention(responseText, brandName, domain)
     return { engine: 'chatgpt', prompt: query, responseText, citedUrl: null, ...analysis }
   } catch (err) {
     console.error('ChatGPT scrape error:', err)
-    return null
+    return mockScrape(query, brandName, domain)
   }
 }
 

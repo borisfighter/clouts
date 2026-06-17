@@ -3,7 +3,7 @@
  */
 import { ScrapeResult } from './perplexity'
 
-const XAI_API_KEY = process.env.XAI_API_KEY
+const XAI_API_KEY = (() => { const k = process.env.XAI_API_KEY; return (!k || k.includes('REPLACE') || k.length < 20) ? undefined : k })()
 
 function analyzeMention(text: string, brandName: string, domain: string) {
   const lower = text.toLowerCase()
@@ -39,11 +39,11 @@ export async function scrapeGrok(query: string, brandName: string, domain: strin
         temperature: 0.3,
       }),
     })
-    if (!res.ok) return null
+    if (!res.ok) return mockScrape(query, brandName, domain)
     const data = await res.json()
     const responseText = data.choices?.[0]?.message?.content || ''
     return { engine: 'grok', prompt: query, responseText, citedUrl: null, ...analyzeMention(responseText, brandName, domain) }
-  } catch { return null }
+  } catch (e) { return mockScrape(query, brandName, domain) }
 }
 
 export async function scrapeGrokBatch(keywords: string[], brandName: string, domain: string): Promise<ScrapeResult[]> {

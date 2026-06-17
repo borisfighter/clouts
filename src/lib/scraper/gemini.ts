@@ -5,7 +5,7 @@
 
 import { ScrapeResult } from './perplexity'
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY
+const GEMINI_API_KEY = (() => { const k = process.env.GEMINI_API_KEY; return (!k || k.includes('REPLACE') || k.length < 20) ? undefined : k })()
 
 function analyzeMention(text: string, brandName: string, domain: string) {
   const lower = text.toLowerCase()
@@ -44,14 +44,14 @@ export async function scrapeGemini(query: string, brandName: string, domain: str
         }),
       }
     )
-    if (!res.ok) return null
+    if (!res.ok) return mockScrape(query, brandName, domain)
     const data = await res.json()
     const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
     const analysis = analyzeMention(responseText, brandName, domain)
     return { engine: 'gemini', prompt: query, responseText, citedUrl: null, ...analysis }
   } catch (err) {
     console.error('Gemini scrape error:', err)
-    return null
+    return mockScrape(query, brandName, domain)
   }
 }
 

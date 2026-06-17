@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 import { sendWelcomeEmail } from '@/lib/email'
 
 export async function GET(request: Request) {
@@ -12,11 +13,10 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.exchangeCodeForSession(code)
 
     if (user) {
-      // Upsert user row (create on first login)
+      // Always upsert user row — works even without service role key
       const { data: existing } = await supabase.from('users').select('id').eq('id', user.id).single()
       if (!existing) {
-        await supabase.from('users').insert({ id: user.id, email: user.email! })
-        // Send welcome email to new users only
+        await supabase.from('users').insert({ id: user.id, email: user.email!, plan: 'free' })
         try { await sendWelcomeEmail(user.email!, user.user_metadata?.full_name) } catch {}
       }
     }

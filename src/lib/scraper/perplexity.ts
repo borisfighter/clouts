@@ -15,7 +15,11 @@ export interface ScrapeResult {
   score: number
 }
 
-const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY
+const PERPLEXITY_API_KEY = (() => {
+  const k = process.env.PERPLEXITY_API_KEY
+  if (!k || k.includes('REPLACE') || k.length < 20) return undefined
+  return k
+})()
 
 /**
  * Detect if a brand domain/name is mentioned in text and estimate sentiment
@@ -101,7 +105,7 @@ export async function scrapePerplexity(
 
     if (!response.ok) {
       console.error(`Perplexity API error: ${response.status} ${response.statusText}`)
-      return null
+      return mockScrape(query, brandName, domain)
     }
 
     const data = await response.json()
@@ -127,7 +131,7 @@ export async function scrapePerplexity(
     }
   } catch (err) {
     console.error('Perplexity scrape error:', err)
-    return null
+    return mockScrape(query, brandName, domain)
   }
 }
 

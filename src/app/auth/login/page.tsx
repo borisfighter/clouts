@@ -24,6 +24,8 @@ export default function LoginPage() {
       setError(error.message)
       setLoading(false)
     } else {
+      // Ensure public.users row exists for email/password logins
+      try { await fetch('/api/auth/ensure-user', { method: 'POST' }) } catch {}
       router.push('/dashboard')
       router.refresh()
     }
@@ -40,20 +42,15 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#08090A] px-4">
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <Link href="/" className="mb-8 flex justify-center text-2xl font-black text-white">
           Clouts<span className="text-violet-400">.</span>
         </Link>
-
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8">
           <h1 className="mb-1 text-xl font-bold text-white">Welcome back</h1>
           <p className="mb-6 text-sm text-white/40">Sign in to your Clouts account</p>
 
-          {/* Google OAuth */}
-          <button
-            onClick={handleGoogle}
-            className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/[0.08]"
-          >
+          <button onClick={handleGoogle}
+            className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/[0.08]">
             <svg width="18" height="18" viewBox="0 0 18 18">
               <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
               <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
@@ -72,20 +69,16 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-3">
             <div>
               <label className="mb-1.5 block text-xs font-medium text-white/50">Email</label>
-              <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                 placeholder="you@company.com" required
-                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30"
-              />
+                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-violet-500/60" />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-white/50">Password</label>
               <div className="relative">
-                <input
-                  type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••" required
-                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 pr-10 text-sm text-white placeholder-white/20 outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30"
-                />
+                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 pr-10 text-sm text-white placeholder-white/20 outline-none focus:border-violet-500/60" />
                 <button type="button" onClick={() => setShowPass(!showPass)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
                   {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -96,9 +89,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</div>
-            )}
+            {error && <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</div>}
 
             <button type="submit" disabled={loading}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-violet-500 disabled:opacity-60">
@@ -107,7 +98,6 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
-
         <p className="mt-4 text-center text-sm text-white/30">
           No account?{' '}
           <Link href="/auth/signup" className="text-violet-400 hover:text-violet-300">Create one free</Link>

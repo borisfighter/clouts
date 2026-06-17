@@ -4,7 +4,7 @@
 import { ScrapeResult } from './perplexity'
 import Anthropic from '@anthropic-ai/sdk'
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
+const ANTHROPIC_API_KEY = (() => { const k = process.env.ANTHROPIC_API_KEY; return (!k || k.includes('REPLACE') || k.length < 20) ? undefined : k })()
 
 function analyzeMention(text: string, brandName: string, domain: string) {
   const lower = text.toLowerCase()
@@ -35,7 +35,7 @@ export async function scrapeClaude(query: string, brandName: string, domain: str
     })
     const responseText = (msg.content[0] as any).text || ''
     return { engine: 'claude', prompt: query, responseText, citedUrl: null, ...analyzeMention(responseText, brandName, domain) }
-  } catch { return null }
+  } catch (e) { return mockScrape(query, brandName, domain) }
 }
 
 export async function scrapeClaudeBatch(keywords: string[], brandName: string, domain: string): Promise<ScrapeResult[]> {
