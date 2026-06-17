@@ -6,9 +6,24 @@ export async function GET() {
   const { error } = await requireAdmin()
   if (error) return error
 
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey || serviceKey.includes('REPLACE')) {
+    // Return stub data when service role key not configured
+    return NextResponse.json({
+      users: { total: 0, last30: 0, last7: 0, today: 0 },
+      brands: { total: 0 },
+      mentions: { total: 0, last7: 0 },
+      clips: { total: 0 },
+      plans: { free: 0 },
+      recentUsers: [],
+      topBrands: [],
+      _note: 'Add SUPABASE_SERVICE_ROLE_KEY to see real stats',
+    })
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    serviceKey,
     { cookies: { getAll: () => [], setAll: () => {} } }
   )
 
