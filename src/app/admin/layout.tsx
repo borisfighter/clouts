@@ -4,15 +4,16 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { LayoutDashboard, Users, Globe, Radio, Scissors, Shield, Menu, X, Loader2 } from 'lucide-react'
+import { LayoutDashboard, Users, Globe, Radio, Scissors, Shield, Menu, X, Loader2, Plug } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV = [
-  { href: '/admin',          icon: LayoutDashboard, label: 'Overview' },
-  { href: '/admin/users',    icon: Users,           label: 'Users' },
-  { href: '/admin/brands',   icon: Globe,           label: 'Brands' },
-  { href: '/admin/mentions', icon: Radio,           label: 'Mentions' },
-  { href: '/admin/clips',    icon: Scissors,        label: 'Clips' },
+  { href: '/admin',               icon: LayoutDashboard, label: 'Overview' },
+  { href: '/admin/users',         icon: Users,           label: 'Users' },
+  { href: '/admin/brands',        icon: Globe,           label: 'Brands' },
+  { href: '/admin/mentions',      icon: Radio,           label: 'Mentions' },
+  { href: '/admin/clips',         icon: Scissors,        label: 'Clips' },
+  { href: '/admin/integrations',  icon: Plug,            label: 'Integrations' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -27,13 +28,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth/login'); return }
-
-      // Verify admin via API
       const res = await fetch('/api/admin/stats')
-      if (res.status === 403 || res.status === 401) {
-        router.push('/dashboard')
-        return
-      }
+      if (res.status === 403 || res.status === 401) { router.push('/dashboard'); return }
       setAuthorized(true)
       setChecking(false)
     }
@@ -59,11 +55,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         'fixed inset-y-0 left-0 z-30 flex w-52 flex-col border-r border-white/[0.07] bg-[#0a0a0b] transition-transform md:relative md:translate-x-0',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
-        {/* Logo */}
         <div className="flex h-14 items-center gap-2 border-b border-white/[0.07] px-4">
-          <Shield size={16} className="text-red-400" />
+          <Shield size={16} className="text-red-400 shrink-0" />
           <span className="text-sm font-black text-white">Admin Panel</span>
-          <Link href="/dashboard" className="ml-auto text-[10px] text-white/30 hover:text-white">← App</Link>
+          <Link href="/dashboard" className="ml-auto text-[10px] text-white/30 hover:text-white transition-colors">← App</Link>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5">

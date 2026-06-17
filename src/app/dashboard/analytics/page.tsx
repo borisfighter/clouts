@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { LineChart, BarChart3, Globe, Bot, TrendingUp, Loader2, Calendar } from 'lucide-react'
+import { Globe, Bot, TrendingUp, Loader2, BarChart3, Minus } from 'lucide-react'
 
 const ENGINE_COLORS: Record<string, string> = {
   perplexity: '#8b5cf6', chatgpt: '#10b981', gemini: '#3b82f6',
@@ -34,24 +34,22 @@ export default function AnalyticsPage() {
     load()
   }, [range])
 
-  // Aggregate by engine
+  // Engine breakdown
   const byEngine = Object.entries(
     mentions.reduce((acc: any, m) => {
       if (!acc[m.engine]) acc[m.engine] = { total: 0, mentioned: 0, scores: [] }
       acc[m.engine].total++
       if (m.mentioned) acc[m.engine].mentioned++
-      if (m.score) acc[m.engine].scores.push(m.score)
+      if (m.score != null) acc[m.engine].scores.push(m.score)
       return acc
     }, {})
-  ).map(([engine, data]: [string, any]) => ({
-    engine,
-    total: data.total,
-    mentioned: data.mentioned,
-    rate: Math.round((data.mentioned / data.total) * 100),
-    avgScore: data.scores.length ? Math.round(data.scores.reduce((a: number, b: number) => a + b) / data.scores.length) : 0,
+  ).map(([engine, d]: any) => ({
+    engine, total: d.total, mentioned: d.mentioned,
+    rate: Math.round((d.mentioned / d.total) * 100),
+    avgScore: d.scores.length ? Math.round(d.scores.reduce((a: number, b: number) => a + b) / d.scores.length) : 0,
   })).sort((a, b) => b.rate - a.rate)
 
-  // Daily breakdown
+  // Daily chart data
   const byDay = mentions.reduce((acc: any, m) => {
     const day = m.scraped_at.slice(0, 10)
     if (!acc[day]) acc[day] = { total: 0, mentioned: 0 }
@@ -59,32 +57,29 @@ export default function AnalyticsPage() {
     if (m.mentioned) acc[day].mentioned++
     return acc
   }, {})
+  const days = Object.entries(byDay).slice(-14) as [string, { total: number; mentioned: number }][]
+  const maxTotal = Math.max(...days.map(([, d]) => d.total), 1)
 
-  const days = Object.entries(byDay).slice(-14)
-  const maxTotal = Math.max(...days.map(([, d]: any) => d.total), 1)
-
+  // Overall stats
   const totalMentioned = mentions.filter(m => m.mentioned).length
   const mentionRate = mentions.length ? Math.round((totalMentioned / mentions.length) * 100) : 0
-  const avgScore = mentions.length
-    ? Math.round(mentions.filter(m => m.score).reduce((s, m) => s + m.score, 0) / (mentions.filter(m => m.score).length || 1))
-    : 0
+  const allScores = mentions.filter(m => m.score != null).map(m => m.score)
+  const avgScore = allScores.length ? Math.round(allScores.reduce((a: number, b: number) => a + b, 0) / allScores.length) : 0
 
-  // Sentiment breakdown
-  const sentiments = mentions.reduce((acc: any, m) => {
-    if (m.mentioned && m.sentiment) { acc[m.sentiment] = (acc[m.sentiment] || 0) + 1 }
-    return acc
+  // Sentiment
+  const sentiments = mentions.filter(m => m.mentioned && m.sentiment).reduce((acc: any, m) => {
+    acc[m.sentiment] = (acc[m.sentiment] || 0) + 1; return acc
   }, {})
+  const sentTotal = Object.values(sentiments).reduce((a: any, b: any) => a + b, 0) as number
 
-  if (loading) return <div className="flex h-48 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/20" /></div>
+  if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/20" /></div>
 
   return (
     <div className="max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-white tracking-tight">Analytics</h1>
-          <p className="mt-1 text-sm text-white/40">
-            {brand ? `AI visibility trends for ${brand.domain}` : 'Add a brand to see analytics'}
-          </p>
+          <p className="mt-1 text-sm text-white/40">{brand ? `AI visibility trends for ${brand.domain}` : 'Add a brand to see analytics'}</p>
         </div>
         <div className="flex rounded-xl border border-white/[0.08] bg-white/[0.04] p-1 gap-1">
           {(['7d', '30d', '90d'] as const).map(r => (
@@ -96,19 +91,17 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Top stats */}
+      {/* Stats */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           { label: 'Total queries', value: mentions.length || '—', icon: Globe },
-          { label: 'Mention rate', value: mentions.length ? `${mentionRate}%` : '—', icon: TrendingUp, color: mentionRate >= 50 ? 'text-emerald-400' : mentionRate >= 25 ? 'text-yellow-400' : 'text-red-400' },
+          { label: 'Mention rate', value: mentions.length ? `${mentionRate}%` : '—', icon: TrendingUp,
+            color: mentionRate >= 50 ? 'text-emerald-400' : mentionRate >= 25 ? 'text-yellow-400' : mentions.length ? 'text-red-400' : 'text-white' },
           { label: 'Avg score', value: avgScore || '—', icon: BarChart3 },
-          { label: 'Engines scanned', value: byEngine.length || '—', icon: Bot },
+          { label: 'Engines', value: byEngine.length || '—', icon: Bot },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Icon size={13} className="text-white/30" />
-              <p className="text-xs text-white/30">{label}</p>
-            </div>
+            <div className="flex items-center gap-2 mb-2"><Icon size={13} className="text-white/30" /><p className="text-xs text-white/30">{label}</p></div>
             <p className={`text-2xl font-black ${color || 'text-white'}`}>{value}</p>
           </div>
         ))}
@@ -116,33 +109,32 @@ export default function AnalyticsPage() {
 
       {mentions.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/[0.08] p-16 text-center">
-          <LineChart size={32} className="mx-auto mb-3 text-white/10" />
+          <BarChart3 size={32} className="mx-auto mb-3 text-white/10" />
           <p className="text-sm text-white/30 mb-1">No data yet for this period</p>
           <p className="text-xs text-white/20 mb-4">Run a scan from the AI Visibility page to start collecting data</p>
           <a href="/dashboard/visibility" className="text-sm text-violet-400 hover:text-violet-300">Go to AI Visibility →</a>
         </div>
       ) : (
         <>
-          {/* Daily activity chart */}
+          {/* Daily chart */}
           {days.length > 0 && (
             <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
-              <p className="text-sm font-semibold text-white mb-4">Daily scan activity</p>
-              <div className="flex items-end gap-1.5 h-24">
-                {days.map(([day, data]: any) => (
-                  <div key={day} className="flex-1 flex flex-col items-center gap-1 group">
-                    <div className="relative w-full flex flex-col justify-end" style={{ height: '80px' }}>
-                      {/* Total bar */}
-                      <div className="w-full rounded-t bg-white/[0.08]" style={{ height: `${(data.total / maxTotal) * 100}%` }} />
-                      {/* Mentioned overlay */}
-                      <div className="absolute bottom-0 w-full rounded-t bg-violet-500/60" style={{ height: `${(data.mentioned / maxTotal) * 100}%` }} />
+              <p className="text-sm font-semibold text-white mb-4">Daily activity</p>
+              <div className="flex items-end gap-1 h-24">
+                {days.map(([day, data]) => (
+                  <div key={day} title={`${day}: ${data.mentioned}/${data.total}`} className="flex-1 flex flex-col justify-end group relative">
+                    <div className="w-full rounded-t bg-white/[0.07]" style={{ height: `${(data.total / maxTotal) * 88}px` }}>
+                      <div className="w-full rounded-t bg-violet-500/60 absolute bottom-0 left-0" style={{ height: `${(data.mentioned / maxTotal) * 88}px` }} />
                     </div>
-                    <span className="text-[9px] text-white/20 hidden group-hover:block">{day.slice(5)}</span>
+                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:block bg-[#1a1a1b] border border-white/[0.10] rounded px-2 py-1 text-[10px] text-white/70 whitespace-nowrap z-10">
+                      {day.slice(5)}: {data.mentioned}/{data.total}
+                    </div>
                   </div>
                 ))}
               </div>
               <div className="flex items-center gap-4 mt-3">
                 <div className="flex items-center gap-1.5"><div className="h-2 w-3 rounded bg-violet-500/60" /><span className="text-[10px] text-white/30">Mentioned</span></div>
-                <div className="flex items-center gap-1.5"><div className="h-2 w-3 rounded bg-white/[0.08]" /><span className="text-[10px] text-white/30">Total queries</span></div>
+                <div className="flex items-center gap-1.5"><div className="h-2 w-3 rounded bg-white/[0.07]" /><span className="text-[10px] text-white/30">Total queries</span></div>
               </div>
             </div>
           )}
@@ -155,40 +147,37 @@ export default function AnalyticsPage() {
             <div className="divide-y divide-white/[0.04]">
               {byEngine.map(({ engine, total, mentioned, rate, avgScore }) => (
                 <div key={engine} className="flex items-center gap-4 px-5 py-3.5">
-                  <div className="w-5 h-5 rounded-full shrink-0" style={{ background: ENGINE_COLORS[engine] || '#666', opacity: 0.7 }} />
+                  <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: ENGINE_COLORS[engine] || '#666', opacity: 0.8 }} />
                   <div className="w-24 text-sm font-medium text-white/70 capitalize">{engine}</div>
                   <div className="flex-1">
                     <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${rate}%`, background: ENGINE_COLORS[engine] || '#8b5cf6', opacity: 0.7 }} />
+                      <div className="h-full rounded-full" style={{ width: `${rate}%`, background: ENGINE_COLORS[engine] || '#8b5cf6', opacity: 0.7 }} />
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`text-sm font-black ${rate >= 50 ? 'text-emerald-400' : rate >= 25 ? 'text-yellow-400' : 'text-white/50'}`}>{rate}%</span>
-                    <span className="text-[10px] text-white/20 ml-1">({mentioned}/{total})</span>
-                  </div>
-                  <div className="w-10 text-right text-xs text-white/30">{avgScore}</div>
+                  <span className={`text-sm font-black w-10 text-right ${rate >= 50 ? 'text-emerald-400' : rate >= 25 ? 'text-yellow-400' : 'text-white/40'}`}>{rate}%</span>
+                  <span className="text-[10px] text-white/20 w-12 text-right">{mentioned}/{total}</span>
+                  <span className="text-xs text-white/30 w-8 text-right">{avgScore}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Sentiment */}
-          {Object.keys(sentiments).length > 0 && (
+          {sentTotal > 0 && (
             <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
               <p className="text-sm font-semibold text-white mb-4">Sentiment when mentioned</p>
-              <div className="flex gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 {[
-                  { key: 'positive', label: 'Positive', color: 'bg-emerald-400' },
-                  { key: 'neutral',  label: 'Neutral',  color: 'bg-white/30' },
-                  { key: 'negative', label: 'Negative', color: 'bg-red-400' },
-                ].map(({ key, label, color }) => {
+                  { key: 'positive', label: 'Positive', bar: 'bg-emerald-400', text: 'text-emerald-400' },
+                  { key: 'neutral',  label: 'Neutral',  bar: 'bg-white/30',    text: 'text-white/50' },
+                  { key: 'negative', label: 'Negative', bar: 'bg-red-400',     text: 'text-red-400' },
+                ].map(({ key, label, bar, text }) => {
                   const count = sentiments[key] || 0
-                  const total = Object.values(sentiments).reduce((a: any, b: any) => a + b, 0) as number
-                  const pct = total ? Math.round((count / total) * 100) : 0
+                  const pct = sentTotal ? Math.round((count / sentTotal) * 100) : 0
                   return (
-                    <div key={key} className="flex-1 rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 text-center">
-                      <div className={`h-1 w-8 rounded-full mx-auto mb-3 ${color}`} />
-                      <p className="text-2xl font-black text-white">{pct}%</p>
+                    <div key={key} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 text-center">
+                      <div className={`h-1 w-8 rounded-full mx-auto mb-3 ${bar}`} />
+                      <p className={`text-2xl font-black ${text}`}>{pct}%</p>
                       <p className="text-xs text-white/30 mt-1">{label}</p>
                       <p className="text-[10px] text-white/20">{count} mentions</p>
                     </div>
@@ -198,24 +187,32 @@ export default function AnalyticsPage() {
             </div>
           )}
 
-          {/* Top performing queries */}
+          {/* Top queries */}
           <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-            <div className="border-b border-white/[0.07] px-5 py-3">
+            <div className="border-b border-white/[0.07] px-5 py-3 flex items-center justify-between">
               <p className="text-sm font-semibold text-white">Top performing queries</p>
+              <span className="text-xs text-white/30">{mentions.filter(m => m.mentioned && m.score).length} with scores</span>
             </div>
-            <div className="divide-y divide-white/[0.04]">
-              {mentions.filter(m => m.mentioned && m.score)
-                .sort((a, b) => b.score - a.score)
-                .slice(0, 8)
-                .map((m, i) => (
-                  <div key={i} className="flex items-center gap-4 px-5 py-3">
-                    <span className="text-xs text-white/20 w-4">{i + 1}</span>
-                    <span className="min-w-[80px] text-xs font-medium capitalize" style={{ color: ENGINE_COLORS[m.engine] || '#fff' }}>{m.engine}</span>
-                    <p className="flex-1 text-xs text-white/50 truncate">{m.prompt}</p>
-                    <span className={`text-sm font-black ${m.score >= 70 ? 'text-emerald-400' : m.score >= 40 ? 'text-yellow-400' : 'text-white/40'}`}>{m.score}</span>
-                  </div>
-                ))}
-            </div>
+            {mentions.filter(m => m.mentioned && m.score).length === 0 ? (
+              <div className="px-5 py-8 text-center text-sm text-white/20">
+                No scored mentions yet — run a scan to populate this
+              </div>
+            ) : (
+              <div className="divide-y divide-white/[0.04]">
+                {mentions.filter(m => m.mentioned && m.score)
+                  .sort((a, b) => b.score - a.score)
+                  .slice(0, 10)
+                  .map((m, i) => (
+                    <div key={i} className="flex items-center gap-4 px-5 py-3">
+                      <span className="text-xs text-white/20 w-5 shrink-0">{i + 1}</span>
+                      <div className="h-2 w-2 rounded-full shrink-0" style={{ background: ENGINE_COLORS[m.engine] || '#666' }} />
+                      <p className="flex-1 text-xs text-white/60 truncate">{m.prompt}</p>
+                      <span className="text-[10px] capitalize text-white/30 shrink-0 w-16 text-right">{m.engine}</span>
+                      <span className={`text-sm font-black shrink-0 w-8 text-right ${m.score >= 70 ? 'text-emerald-400' : m.score >= 40 ? 'text-yellow-400' : 'text-white/40'}`}>{m.score}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         </>
       )}
