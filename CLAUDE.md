@@ -134,3 +134,27 @@ Never commit `.env.local`. Never hardcode secrets.
 6. `src/server/routers/mentions.ts` — mentions router with visibility scores
 7. `src/lib/scraper/` — AI engine scrapers (start with Perplexity)
 8. `jobs/inngest.ts` — clip processing job (already scaffolded, needs FFmpeg + Mux wired)
+
+## Admin Panel
+
+Admin section lives at `/admin` — accessible only to emails listed in `ADMIN_EMAILS` env var.
+
+### Setup
+Add to Vercel environment variables:
+```
+ADMIN_EMAILS=boris@example.com,kseniya@example.com
+```
+
+Comma-separated list. Checked server-side on every admin API call.
+
+### Routes
+- `/admin` — overview dashboard (users, brands, mentions, clips, plan breakdown)
+- `/admin/users` — user table with search, plan editor, delete
+- `/admin/brands` — brand table with search, delete
+- `/admin/mentions` — mention stats + Supabase link
+- `/admin/clips` — clip stats + Mux/Supabase links
+
+### API
+- `GET /api/admin/stats` — all platform stats
+- `GET/PATCH/DELETE /api/admin/users` — user management
+- `GET/DELETE /api/admin/brands` — brand management
