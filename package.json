@@ -6,70 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "type-check": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx scripts/seed.ts",
-    "email:dev": "email dev --dir src/emails",
-    "inngest:dev": "npx inngest-cli@latest dev"
+    "lint": "next lint"
   },
   "dependencies": {
     "next": "14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-
-    "@trpc/client": "^11.0.0",
-    "@trpc/next": "^11.0.0",
-    "@trpc/react-query": "^11.0.0",
-    "@trpc/server": "^11.0.0",
-    "@tanstack/react-query": "^5.51.1",
-
-    "@supabase/supabase-js": "^2.44.4",
-    "@supabase/ssr": "^0.4.0",
-    "drizzle-orm": "^0.31.4",
-    "postgres": "^3.4.4",
-
-    "next-auth": "^5.0.0-beta.19",
-    "@auth/drizzle-adapter": "^1.1.0",
-
-    "zod": "^3.23.8",
-    "zod-form-data": "^2.0.2",
-
-    "@upstash/redis": "^1.31.3",
-    "@upstash/ratelimit": "^2.0.1",
-
-    "ai": "^3.2.22",
-    "@ai-sdk/anthropic": "^0.0.39",
-    "@ai-sdk/openai": "^0.0.43",
-    "openai": "^4.52.7",
-    "@anthropic-ai/sdk": "^0.27.3",
-
-    "inngest": "^3.19.12",
-
-    "resend": "^3.3.0",
-    "@react-email/components": "^0.0.22",
-    "@react-email/render": "^0.0.17",
-
-    "stripe": "^16.2.0",
-    "@stripe/stripe-js": "^4.1.0",
-
-    "@mux/mux-node": "^8.5.0",
-    "@mux/mux-player-react": "^2.9.0",
-    "assemblyai": "^4.6.1",
-
     "framer-motion": "^11.3.2",
     "lucide-react": "^0.414.0",
-    "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^2.4.0",
-
-    "date-fns": "^3.6.0",
-    "superjson": "^2.2.1",
-    "nanoid": "^5.0.7",
-    "sharp": "^0.33.4"
+    "tailwind-merge": "^2.4.0"
   },
   "devDependencies": {
     "typescript": "^5.5.3",
@@ -81,9 +27,6 @@
     "autoprefixer": "^10.4.19",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.5",
-    "drizzle-kit": "^0.22.8",
-    "tsx": "^4.16.2",
-    "dotenv": "^16.4.5",
     "@tailwindcss/typography": "^0.5.13",
     "@tailwindcss/forms": "^0.5.7"
   }
