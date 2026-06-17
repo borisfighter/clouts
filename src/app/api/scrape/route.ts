@@ -19,12 +19,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No keywords configured. Add keywords in Settings first.' }, { status: 400 })
   }
 
-  const selectedEngines = (engines as Engine[]) || ['perplexity', 'chatgpt', 'gemini']
+  const selectedEngines = (engines as Engine[]) || ['perplexity']
   const results = await scrapeAllEngines(keywords, brand.name, brand.domain, selectedEngines)
 
-  let insertError = null
   if (results.length > 0) {
-    const { error } = await supabase.from('mentions').insert(
+    await supabase.from('mentions').insert(
       results.map(r => ({
         brand_id: brandId,
         engine: r.engine,
@@ -37,13 +36,11 @@ export async function POST(req: NextRequest) {
         score: r.score,
       }))
     )
-    insertError = error?.message || null
   }
 
   return NextResponse.json({
     scraped: results.length,
     mentioned: results.filter(r => r.mentioned).length,
-    insertError,
     byEngine: selectedEngines.map(e => ({
       engine: e,
       count: results.filter(r => r.engine === e).length,
