@@ -22,8 +22,9 @@ export async function POST(req: NextRequest) {
   const selectedEngines = (engines as Engine[]) || ['perplexity', 'chatgpt', 'gemini']
   const results = await scrapeAllEngines(keywords, brand.name, brand.domain, selectedEngines)
 
+  let insertError = null
   if (results.length > 0) {
-    await supabase.from('mentions').insert(
+    const { error } = await supabase.from('mentions').insert(
       results.map(r => ({
         brand_id: brandId,
         engine: r.engine,
@@ -36,11 +37,13 @@ export async function POST(req: NextRequest) {
         score: r.score,
       }))
     )
+    insertError = error?.message || null
   }
 
   return NextResponse.json({
     scraped: results.length,
     mentioned: results.filter(r => r.mentioned).length,
+    insertError,
     byEngine: selectedEngines.map(e => ({
       engine: e,
       count: results.filter(r => r.engine === e).length,
