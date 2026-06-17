@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Radio, BarChart3, Scissors, Library,
-  Send, Bot, LineChart, Settings, Menu, ChevronDown, Zap, LogOut
+  Send, Bot, LineChart, Settings, Menu, ChevronDown, Zap, LogOut, Crown
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -35,13 +35,35 @@ const navSections = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [brand, setBrand] = useState<any>(null)
+  const [user, setUser] = useState<any>(null)
+  const [plan, setPlan] = useState<string>('free')
   const pathname = usePathname()
   const router = useRouter()
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      setUser(user)
+      const [{ data: b }, { data: u }] = await Promise.all([
+        supabase.from('brands').select('name, domain').eq('user_id', user.id).eq('is_default', true).single(),
+        supabase.from('users').select('plan').eq('id', user.id).single(),
+      ])
+      if (b) setBrand(b)
+      if (u) setPlan(u.plan || 'free')
+    }
+    load()
+  }, [pathname])
 
   const handleSignOut = async () => {
-    await createClient().auth.signOut()
+    await supabase.auth.signOut()
     router.push('/auth/login')
   }
+
+  const initials = (user?.user_metadata?.full_name || user?.email || 'U')
+    .split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#08090A] text-white">
@@ -65,9 +87,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="border-b border-white/[0.07] px-3 py-2.5">
           <Link href="/dashboard/settings"
             className="flex w-full items-center gap-2 rounded-lg bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/70 hover:bg-white/[0.07] transition-colors">
-            <div className="flex h-5 w-5 items-center justify-center rounded bg-violet-500/20 text-violet-400 text-[10px] font-bold">C</div>
-            <span className="flex-1 text-left truncate">My Brand</span>
-            <ChevronDown size={12} className="text-white/30" />
+            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-violet-500/20 text-violet-400 text-[10px] font-bold">
+              {brand?.name?.[0]?.toUpperCase() || '?'}
+            </div>
+            <span className="flex-1 text-left truncate">{brand?.name || 'Add your brand'}</span>
+            <ChevronDown size={12} className="text-white/30 shrink-0" />
           </Link>
         </div>
 
@@ -104,23 +128,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-white/30 hover:bg-white/[0.04] hover:text-red-400 transition-colors">
             <LogOut size={14} />Sign out
           </button>
-          <div className="flex items-center gap-2 rounded-lg bg-emerald-400/[0.06] px-3 py-2 border border-emerald-400/10">
-            <Zap size={12} className="text-emerald-400" />
-            <span className="text-[10px] text-emerald-400/80 font-medium">Free Plan</span>
-            <Link href="/pricing" className="ml-auto text-[10px] text-emerald-400 font-semibold hover:underline">Upgrade</Link>
-          </div>
+
+          {/* Plan badge */}
+          {plan === 'free' ? (
+            <Link href="/pricing"
+              className="flex items-center gap-2 rounded-lg bg-violet-500/[0.08] border border-violet-500/15 px-3 py-2 hover:bg-violet-500/[0.12] transition-colors">
+              <Zap size={12} className="text-violet-400" />
+              <span className="text-[10px] text-violet-400/80 font-medium flex-1">Free Plan</span>
+              <span className="text-[10px] text-violet-400 font-bold">Upgrade →</span>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg bg-emerald-400/[0.06] border border-emerald-400/10 px-3 py-2">
+              <Crown size={12} className="text-emerald-400" />
+              <span className="text-[10px] text-emerald-400/80 font-medium capitalize">{plan} Plan</span>
+            </div>
+          )}
         </div>
       </aside>
 
+      {/* Main */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.07] bg-[#08090A] px-4">
           <button className="rounded-md p-1.5 text-white/40 hover:text-white md:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu size={18} />
           </button>
           <div className="flex-1" />
+          {/* User avatar */}
           <button onClick={handleSignOut}
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-500/20 text-violet-300 text-xs font-bold hover:bg-violet-500/30 transition-colors">
-            K
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-500/20 text-violet-300 text-[10px] font-bold hover:bg-violet-500/30 transition-colors"
+            title={`Signed in as ${user?.email} — click to sign out`}>
+            {initials}
           </button>
         </header>
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
