@@ -1,44 +1,191 @@
-import { Bot, Plus, Zap } from 'lucide-react'
+'use client'
 
-const agentTypes = [
-  { type: 'aeo',     label: 'AEO Agent',     desc: 'Rewrites content to rank in AI answers',         color: 'border-violet-500/20 bg-violet-500/[0.04]' },
-  { type: 'content', label: 'Content Agent',  desc: 'Generates AEO-optimized FAQs and articles',     color: 'border-blue-500/20 bg-blue-500/[0.04]' },
-  { type: 'pr',      label: 'PR Agent',       desc: 'Monitors sentiment, drafts press responses',    color: 'border-pink-500/20 bg-pink-500/[0.04]' },
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Bot, Zap, Loader2, ChevronDown, ChevronUp, TrendingUp, FileText, Search } from 'lucide-react'
+
+const AGENT_TYPES = [
+  { type: 'aeo', label: 'AEO Agent', desc: 'Analyzes your AI mentions and generates content recommendations to improve visibility', icon: Search, color: 'border-violet-500/20 bg-violet-500/[0.04] hover:border-violet-500/40' },
+  { type: 'content', label: 'Content Agent', desc: 'Generates AEO-optimized FAQ pages, articles, and guides targeting your keywords', icon: FileText, color: 'border-blue-500/20 bg-blue-500/[0.04] hover:border-blue-500/40', soon: true },
+  { type: 'pr', label: 'PR Agent', desc: 'Monitors sentiment shifts and drafts press responses to negative AI mentions', icon: TrendingUp, color: 'border-pink-500/20 bg-pink-500/[0.04] hover:border-pink-500/40', soon: true },
 ]
 
 export default function AgentsPage() {
+  const supabase = createClient()
+  const [brand, setBrand] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [running, setRunning] = useState<string | null>(null)
+  const [analysis, setAnalysis] = useState<any>(null)
+  const [expanded, setExpanded] = useState<string[]>([])
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return setLoading(false)
+      const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
+      setBrand(b)
+      if (b) {
+        const { data: runs } = await supabase.from('agent_runs').select('*, agents(type)').order('started_at', { ascending: false }).limit(1)
+        if (runs?.[0]?.output) setAnalysis(runs[0].output)
+      }
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  const runAgent = async (type: string) => {
+    if (!brand) return
+    setRunning(type)
+    setAnalysis(null)
+    try {
+      const res = await fetch('/api/agents/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandId: brand.id, agentType: type }),
+      })
+      const data = await res.json()
+      if (data.analysis) setAnalysis(data.analysis)
+    } finally {
+      setRunning(null)
+    }
+  }
+
+  const toggle = (key: string) => setExpanded(e => e.includes(key) ? e.filter(k => k !== key) : [...e, key])
+
+  if (loading) return <div className="flex h-48 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/20" /></div>
+
   return (
-    <div className="max-w-5xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Marketing Agents</h1>
-          <p className="mt-1 text-sm text-white/40">Autonomous workers for every marketing function</p>
-        </div>
-        <button className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 transition-colors">
-          <Plus size={14} /> New agent
-        </button>
+    <div className="max-w-4xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-black text-white tracking-tight">Marketing Agents</h1>
+        <p className="mt-1 text-sm text-white/40">AI agents that work autonomously to improve your brand's AI visibility</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {agentTypes.map(({ label, desc, color }) => (
-          <div key={label} className={`rounded-2xl border p-5 cursor-pointer hover:scale-[1.01] transition-transform ${color}`}>
+      {/* Agent cards */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {AGENT_TYPES.map(({ type, label, desc, icon: Icon, color, soon }) => (
+          <div key={type} className={`rounded-2xl border p-5 transition-all ${color}`}>
             <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white/[0.06]">
-              <Bot size={16} className="text-white/60" />
+              <Icon size={16} className="text-white/60" />
             </div>
             <h3 className="text-sm font-bold text-white mb-1">{label}</h3>
-            <p className="text-xs text-white/40">{desc}</p>
-            <button className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-violet-400 hover:text-violet-300">
-              <Zap size={11} /> Launch
-            </button>
+            <p className="text-xs text-white/40 mb-4 leading-relaxed">{desc}</p>
+            {soon ? (
+              <span className="text-[10px] font-semibold text-white/20 uppercase tracking-widest">Coming soon</span>
+            ) : (
+              <button
+                onClick={() => runAgent(type)}
+                disabled={!brand || running === type}
+                className="flex items-center gap-1.5 text-xs font-semibold text-violet-400 hover:text-violet-300 disabled:opacity-40 transition-colors"
+              >
+                {running === type ? <Loader2 size={11} className="animate-spin" /> : <Zap size={11} />}
+                {running === type ? 'Running...' : 'Run agent'}
+              </button>
+            )}
           </div>
         ))}
       </div>
 
-      <div className="rounded-2xl border border-dashed border-white/[0.08] p-12 text-center">
-        <Bot size={28} className="mx-auto mb-3 text-white/10" />
-        <p className="text-sm font-medium text-white/30 mb-1">No agents running</p>
-        <p className="text-xs text-white/20">Launch an agent above to start automating your marketing</p>
-      </div>
+      {!brand && (
+        <div className="rounded-2xl border border-dashed border-white/[0.08] p-10 text-center">
+          <Bot size={28} className="mx-auto mb-3 text-white/10" />
+          <p className="text-sm text-white/30 mb-3">Add a brand in Settings to run agents</p>
+          <a href="/dashboard/settings" className="text-sm text-violet-400 hover:text-violet-300">Go to Settings →</a>
+        </div>
+      )}
+
+      {/* AEO Analysis results */}
+      {analysis && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-bold text-white">AEO Analysis</h2>
+            <div className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+              analysis.overallScore >= 70 ? 'bg-emerald-400/15 text-emerald-400' :
+              analysis.overallScore >= 40 ? 'bg-yellow-400/15 text-yellow-400' :
+              'bg-red-400/15 text-red-400'
+            }`}>
+              Score: {analysis.overallScore}/100
+            </div>
+          </div>
+
+          {/* Summary */}
+          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
+            <p className="text-sm text-white/60">{analysis.summary}</p>
+          </div>
+
+          {/* Strengths + Gaps */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-xl border border-emerald-400/15 bg-emerald-400/[0.04] p-4">
+              <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">Strengths</p>
+              <ul className="space-y-1.5">
+                {analysis.strengths?.map((s: string, i: number) => (
+                  <li key={i} className="text-xs text-white/60 flex gap-2"><span className="text-emerald-400">✓</span>{s}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-xl border border-red-400/15 bg-red-400/[0.04] p-4">
+              <p className="text-xs font-bold text-red-400 mb-2 uppercase tracking-widest">Gaps</p>
+              <ul className="space-y-1.5">
+                {analysis.gaps?.map((g: string, i: number) => (
+                  <li key={i} className="text-xs text-white/60 flex gap-2"><span className="text-red-400">✗</span>{g}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+            <button onClick={() => toggle('recs')} className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-white hover:bg-white/[0.03]">
+              Recommendations ({analysis.recommendations?.length || 0})
+              {expanded.includes('recs') ? <ChevronUp size={14} className="text-white/30" /> : <ChevronDown size={14} className="text-white/30" />}
+            </button>
+            {expanded.includes('recs') && (
+              <div className="divide-y divide-white/[0.04] border-t border-white/[0.07]">
+                {analysis.recommendations?.map((r: any, i: number) => (
+                  <div key={i} className="px-5 py-4">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        r.priority === 'high' ? 'bg-red-400/15 text-red-400' :
+                        r.priority === 'medium' ? 'bg-yellow-400/15 text-yellow-400' :
+                        'bg-white/[0.08] text-white/40'
+                      }`}>{r.priority}</span>
+                      <span className="text-sm font-semibold text-white">{r.title}</span>
+                    </div>
+                    <p className="text-xs text-white/50 mb-1">{r.action}</p>
+                    <p className="text-xs text-emerald-400/70">→ {r.expectedImpact}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Content ideas */}
+          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+            <button onClick={() => toggle('content')} className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-white hover:bg-white/[0.03]">
+              Content ideas ({analysis.contentIdeas?.length || 0})
+              {expanded.includes('content') ? <ChevronUp size={14} className="text-white/30" /> : <ChevronDown size={14} className="text-white/30" />}
+            </button>
+            {expanded.includes('content') && (
+              <div className="divide-y divide-white/[0.04] border-t border-white/[0.07]">
+                {analysis.contentIdeas?.map((c: any, i: number) => (
+                  <div key={i} className="px-5 py-4">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="rounded bg-violet-500/15 px-1.5 py-0.5 text-[10px] font-bold text-violet-400 uppercase">{c.format}</span>
+                      <span className="text-sm font-semibold text-white">{c.title}</span>
+                    </div>
+                    <p className="text-xs text-white/30 mb-2">Targets: "{c.targetQuery}"</p>
+                    <ul className="space-y-0.5">
+                      {c.outline?.map((o: string, j: number) => (
+                        <li key={j} className="text-xs text-white/50 flex gap-2"><span className="text-white/20">{j+1}.</span>{o}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
