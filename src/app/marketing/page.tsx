@@ -40,6 +40,13 @@ const FEATURES = [
     bg: 'bg-yellow-500/10 border-yellow-500/20',
   },
   {
+    icon: Shield,
+    title: 'Hallucination Detection',
+    desc: 'Automatically detect when AI engines make false claims about your brand — wrong pricing, fabricated features, or inaccurate positioning — before it hurts revenue.',
+    color: 'text-red-400',
+    bg: 'bg-red-500/10 border-red-500/20',
+  },
+  {
     icon: Globe,
     title: 'Hourly Background Scans',
     desc: 'Set it and forget it. Automated scans run every hour and alert you to sentiment shifts, new citations, and visibility changes.',
