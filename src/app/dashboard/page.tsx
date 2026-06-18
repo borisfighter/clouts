@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { OnboardingChecklist } from '@/components/OnboardingChecklist'
+import { InsightsBanner } from '@/components/InsightsBanner'
 import { Radio, TrendingUp, Scissors, Bot, ArrowUpRight, Loader2, RefreshCw, Zap, Crown, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -35,6 +36,9 @@ export default function DashboardPage() {
     const mentioned = mentions?.filter(m => m.mentioned).length || 0
     const scores = mentions?.filter(m => m.score != null).map(m => m.score) || []
     const avgScore = scores.length ? Math.round(scores.reduce((a: number, b: number) => a + b) / scores.length) : null
+    const hasCitedUrls = mentions?.some(m => m.cited_url) || false
+    const negSentiment = mentions?.filter(m => m.sentiment === 'negative').length || 0
+    const topSentiment = negSentiment > (mentions?.length || 0) * 0.3 ? 'negative' : 'neutral'
 
     // Engine breakdown
     const byEngine: Record<string, { total: number; mentioned: number }> = {}
@@ -184,6 +188,18 @@ export default function DashboardPage() {
       ) : (
         <>
           {/* Stats */}
+          {hasScanData && stats.mentionRate !== null && (
+            <InsightsBanner
+              mentionRate={stats.mentionRate || 0}
+              avgScore={stats.avgScore || 0}
+              hasCitedUrls={recentMentions.some((m: any) => m.cited_url)}
+              sentiment={
+                recentMentions.filter((m: any) => m.sentiment === 'negative').length > recentMentions.length * 0.3
+                  ? 'negative' : 'neutral'
+              }
+            />
+          )}
+
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
               { label: 'AI Mention Rate', value: stats.mentionRate !== null ? `${stats.mentionRate}%` : '—', color: stats.mentionRate !== null ? (stats.mentionRate >= 50 ? 'text-emerald-400' : stats.mentionRate >= 25 ? 'text-yellow-400' : 'text-red-400') : 'text-white' },
