@@ -265,6 +265,37 @@ export default function VisibilityPage() {
         </div>
       )}
 
+      {/* Top performing queries */}
+      {mentions.length > 0 && (
+        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+          <div className="border-b border-white/[0.07] px-5 py-3 flex items-center justify-between">
+            <p className="text-sm font-semibold text-white">Top performing queries</p>
+            <a href="/dashboard/analytics" className="text-[11px] text-violet-400 hover:text-violet-300 flex items-center gap-1">
+              All analytics <ChevronRight size={11} />
+            </a>
+          </div>
+          <div className="divide-y divide-white/[0.04]">
+            {mentions.filter(m => m.mentioned && m.score)
+              .sort((a, b) => (b.score || 0) - (a.score || 0))
+              .slice(0, 5)
+              .map((m, i) => (
+                <div key={i} className="flex items-center gap-4 px-5 py-3">
+                  <span className="text-xs text-white/20 w-4 shrink-0">{i + 1}</span>
+                  <div className="h-2 w-2 rounded-full shrink-0" style={{ background: ENGINE_COLORS[m.engine] || '#666' }} />
+                  <p className="flex-1 text-xs text-white/60 truncate">{m.prompt}</p>
+                  <span className="text-[10px] capitalize text-white/30 shrink-0">{m.engine}</span>
+                  <span className={`text-sm font-black shrink-0 w-8 text-right ${(m.score || 0) >= 70 ? 'text-emerald-400' : (m.score || 0) >= 40 ? 'text-yellow-400' : 'text-white/40'}`}>
+                    {m.score}
+                  </span>
+                </div>
+              ))}
+            {mentions.filter(m => m.mentioned && m.score).length === 0 && (
+              <div className="px-5 py-4 text-xs text-white/25 text-center">Run a scan to see top performing queries</div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Empty states */}
       {!brand && (
         <div className="rounded-2xl border border-dashed border-white/[0.08] p-12 text-center">

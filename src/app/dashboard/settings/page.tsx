@@ -281,6 +281,39 @@ function SettingsInner() {
         )}
       </div>
 
+      {/* Scan schedule */}
+      {brandId && (
+        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-4">
+          <h2 className="text-sm font-bold text-white">Automated scans</h2>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-white/60">Hourly background scans</p>
+              <p className="text-xs text-white/30 mt-0.5">Clouts scans your brand every hour using Inngest background jobs (Pro/Team)</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {userPlan === 'free' ? (
+                <a href="/pricing" className="flex items-center gap-1.5 rounded-xl border border-violet-500/20 bg-violet-500/[0.08] px-3 py-2 text-xs font-semibold text-violet-400 hover:bg-violet-500/[0.14] transition-colors">
+                  <Zap size={11} /> Upgrade to unlock
+                </a>
+              ) : (
+                <span className="rounded-full bg-emerald-400/10 border border-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-400">
+                  ✓ Active
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-4 pt-2 border-t border-white/[0.07]">
+            <div>
+              <p className="text-sm text-white/60">Weekly email report</p>
+              <p className="text-xs text-white/30 mt-0.5">Sent every Monday at 9am — your 7-day visibility summary</p>
+            </div>
+            <span className="rounded-full bg-emerald-400/10 border border-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-400 shrink-0">
+              ✓ Active
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Notifications */}
       <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-4">
         <h2 className="text-sm font-bold text-white">Notifications</h2>

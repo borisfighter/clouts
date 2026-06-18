@@ -154,6 +154,88 @@ export default function PricingPage() {
           </div>
         </div>
       </div>
+    {/* Competitor comparison */}
+      <section className="border-t border-white/[0.07] bg-white/[0.01] py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-black text-white mb-3">How Clouts compares</h2>
+            <p className="text-white/40">Same features. Fraction of the price.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/[0.07]">
+                  <th className="text-left px-4 py-3 text-xs font-bold text-white/30 uppercase tracking-widest w-52">Feature</th>
+                  {[
+                    { name: 'Clouts Pro', price: '$79/mo', highlight: true },
+                    { name: 'Profound', price: '$499/mo', highlight: false },
+                    { name: 'Visiblie', price: '$149/mo', highlight: false },
+                    { name: 'SE Visible', price: '$355/mo', highlight: false },
+                  ].map(({ name, price, highlight }) => (
+                    <th key={name} className={`px-4 py-3 text-center ${highlight ? 'bg-violet-500/[0.08] rounded-t-xl' : ''}`}>
+                      <p className={`text-sm font-bold ${highlight ? 'text-white' : 'text-white/50'}`}>{name}</p>
+                      <p className={`text-xs ${highlight ? 'text-violet-400' : 'text-white/30'}`}>{price}</p>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['AI engines monitored', '5', '10', '4-8', '4'],
+                  ['Mention rate tracking', '✓', '✓', '✓', '✓'],
+                  ['Sentiment analysis', '✓', '✓', '✓', '✓'],
+                  ['Competitor tracking', '✓', '✓', '✓', '✓'],
+                  ['Hallucination detection', '✓', '✓', '✓', '—'],
+                  ['AEO agent (AI recommendations)', '✓', '—', '—', '—'],
+                  ['Auto video clipping', '✓', '—', '—', '—'],
+                  ['Public share reports', '✓', '—', '—', '—'],
+                  ['CSV export', '✓', '✓', '—', '—'],
+                  ['Scan history', '✓', '✓', '✓', '✓'],
+                  ['5 brands', '✓', '1 (Basic)', '3', '1'],
+                ].map(([feature, clouts, profound, visiblie, sevisible]) => (
+                  <tr key={feature as string} className="border-b border-white/[0.04] hover:bg-white/[0.01]">
+                    <td className="px-4 py-3 text-sm text-white/60">{feature}</td>
+                    {[
+                      { val: clouts, highlight: true },
+                      { val: profound, highlight: false },
+                      { val: visiblie, highlight: false },
+                      { val: sevisible, highlight: false },
+                    ].map(({ val, highlight }, i) => (
+                      <td key={i} className={`px-4 py-3 text-center text-sm ${highlight ? 'bg-violet-500/[0.04] font-semibold' : ''}`}>
+                        <span className={val === '✓' ? 'text-emerald-400' : val === '—' ? 'text-white/15' : highlight ? 'text-violet-300' : 'text-white/50'}>
+                          {val}
+                        </span>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-center text-xs text-white/20 mt-4">Competitor pricing as of June 2026. Clouts features based on Pro plan.</p>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-white/[0.07] py-20">
+        <div className="mx-auto max-w-3xl px-6">
+          <h2 className="text-3xl font-black text-white text-center mb-10">FAQ</h2>
+          <div className="space-y-4">
+            {[
+              { q: 'How does Clouts monitor AI engines?', a: 'We query ChatGPT, Perplexity, Claude, Gemini, and Grok with your tracked keywords and analyze every response to see if — and how — your brand is mentioned. You get mention rate, sentiment, position, and score for each engine.' },
+              { q: 'Is there a free trial?', a: 'Yes — the Free plan is free forever (no credit card required) with 1 brand, 100 mentions/mo, and Perplexity monitoring. Upgrade to Pro for all 5 engines, 10,000 mentions, and 5 brands.' },
+              { q: 'What is hallucination detection?', a: 'Our AEO agent analyzes AI response text to flag when an engine makes potentially inaccurate claims about your brand — wrong pricing, fabricated features, or misleading comparisons. You're alerted so you can create corrective content.' },
+              { q: 'Can I cancel anytime?', a: 'Yes. Cancel anytime from the Billing section in Settings. You keep access until the end of your billing period.' },
+              { q: 'What is the AEO Agent?', a: 'The AEO (Answer Engine Optimization) Agent is powered by Claude claude-sonnet-4-6. It analyzes your scan data and generates a prioritized content roadmap — FAQ pages, comparison articles, and guides — specifically designed to get your brand cited more often in AI responses.' },
+            ].map(({ q, a }) => (
+              <div key={q} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
+                <p className="text-sm font-bold text-white mb-2">{q}</p>
+                <p className="text-sm text-white/50 leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
