@@ -71,6 +71,16 @@ function SettingsInner() {
     }
   }
 
+  const clearScanData = async () => {
+    if (!brandId) return
+    if (!window.confirm(`Clear all scan data for "${name}"? This removes all AI mentions, scan history, and analytics. Brand settings are kept.`)) return
+    const { createClient } = await import('@/lib/supabase/client')
+    const supabase = createClient()
+    await supabase.from('mentions').delete().eq('brand_id', brandId)
+    await supabase.from('prompt_volumes').delete().eq('brand_id', brandId)
+    window.location.reload()
+  }
+
   const suggestKeywords = async () => {
     if (!name) return
     setSuggesting(true)
@@ -339,6 +349,16 @@ function SettingsInner() {
             <h2 className="text-sm font-bold text-white">Danger zone</h2>
           </div>
           <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-white/60">Clear scan data</p>
+              <p className="text-xs text-white/30 mt-0.5">Remove all AI mentions, history, and analytics. Brand settings are kept.</p>
+            </div>
+            <button onClick={clearScanData}
+              className="flex items-center gap-1.5 rounded-xl border border-orange-500/20 bg-orange-500/[0.08] px-4 py-2 text-sm font-medium text-orange-400 hover:bg-orange-500/[0.15] transition-colors whitespace-nowrap shrink-0">
+              <Trash2 size={13} /> Clear data
+            </button>
+          </div>
+          <div className="flex items-center justify-between gap-4 pt-4 border-t border-red-500/10">
             <div>
               <p className="text-sm text-white/60">Delete brand</p>
               <p className="text-xs text-white/30 mt-0.5">Permanently remove {name} and all its scan data, clips, and agents.</p>

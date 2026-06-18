@@ -25,6 +25,7 @@ export default function VisibilityPage() {
   const [loading, setLoading] = useState(true)
   const [scraping, setScraping] = useState(false)
   const [scanStatus, setScanStatus] = useState<{ msg: string; type: 'info' | 'success' | 'error' } | null>(null)
+  const [linkCopied, setLinkCopied] = useState(false)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [range, setRange] = useState<'7d' | '30d' | 'all'>('30d')
 
@@ -96,6 +97,13 @@ export default function VisibilityPage() {
 
   const totalMentions = mentions.filter(m => m.mentioned).length
   const mentionRate = mentions.length > 0 ? Math.round((totalMentions / mentions.length) * 100) : null
+  
+  // Share of voice calculation (if brand has competitors)
+  const competitorMentions = brand?.competitors?.length > 0
+    ? mentions.filter(m => m.response_text && brand.competitors.some((c: string) => m.response_text.toLowerCase().includes(c.toLowerCase()))).length
+    : 0
+  const totalVoice = totalMentions + competitorMentions
+  const shareOfVoice = totalVoice > 0 ? Math.round((totalMentions / totalVoice) * 100) : null
   const allScores = mentions.filter(m => m.score).map(m => m.score!)
   const avgScore = allScores.length ? Math.round(allScores.reduce((a, b) => a + b) / allScores.length) : null
 
@@ -127,10 +135,14 @@ export default function VisibilityPage() {
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 Share
               </a>
-              <button onClick={() => { navigator.clipboard.writeText(`https://www.clouts.com/r/${brand.share_slug}`); }}
-                className="flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/50 hover:text-white hover:border-white/20 transition-colors">
+              <button onClick={() => {
+                navigator.clipboard.writeText(`https://www.clouts.com/r/${brand.share_slug}`)
+                setLinkCopied(true)
+                setTimeout(() => setLinkCopied(false), 2500)
+              }}
+                className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium transition-all ${linkCopied ? 'border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-400' : 'border-white/[0.08] bg-white/[0.04] text-white/50 hover:text-white hover:border-white/20'}`}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                Copy link
+                {linkCopied ? '✓ Copied!' : 'Copy link'}
               </button>
             </div>
           )}
@@ -166,7 +178,9 @@ export default function VisibilityPage() {
           { label: 'Mention rate', value: mentionRate !== null ? `${mentionRate}%` : '—',
             color: mentionRate !== null ? (mentionRate >= 50 ? 'text-emerald-400' : mentionRate >= 25 ? 'text-yellow-400' : 'text-red-400') : 'text-white' },
           { label: 'Queries scanned', value: mentions.length > 0 ? mentions.length.toLocaleString() : '—', color: 'text-white' },
-          { label: 'Avg visibility score', value: avgScore !== null ? String(avgScore) : '—', color: 'text-white' },
+          shareOfVoice !== null
+            ? { label: 'Share of voice', value: `${shareOfVoice}%`, color: shareOfVoice >= 50 ? 'text-emerald-400' : shareOfVoice >= 25 ? 'text-yellow-400' : 'text-red-400' }
+            : { label: 'Avg visibility score', value: avgScore !== null ? String(avgScore) : '—', color: 'text-white' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-4">
             <p className="text-xs text-white/30 mb-1">{label}</p>
