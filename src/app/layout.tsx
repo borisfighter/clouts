@@ -5,9 +5,9 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Clouts — AI Visibility + Content Clipping',
+  title: { default: 'Clouts — AI Visibility + Content Clipping', template: '%s | Clouts' },
   description: 'Monitor your brand across 9 AI engines. Get AI-powered recommendations. Auto-clip your best brand moments into viral content.',
-  keywords: ['AI visibility', 'brand monitoring', 'ChatGPT', 'Perplexity', 'AI search', 'content clipping', 'AEO'],
+  keywords: ['AI visibility', 'brand monitoring', 'ChatGPT', 'Perplexity', 'AI search', 'content clipping', 'AEO', 'AI search optimization'],
   authors: [{ name: 'Clouts' }],
   creator: 'Clouts',
   publisher: 'Clouts',
@@ -23,19 +23,36 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Clouts — Win in AI Search',
-    description: 'Monitor your brand across ChatGPT, Perplexity, Claude, Gemini, Grok and more. Auto-clip viral moments.',
+    description: 'Monitor your brand across ChatGPT, Perplexity, Claude, Gemini, Grok and more.',
     creator: '@cloutsdotcom',
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Clouts',
+  applicationCategory: 'BusinessApplication',
+  description: 'AI Visibility monitoring and content clipping platform',
+  url: 'https://www.clouts.com',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+    description: 'Free plan available',
   },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={`${inter.className} bg-[#08090A] text-white antialiased`}>
         {children}
       </body>

@@ -2,180 +2,157 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Send, Loader2, Twitter, Instagram, Youtube, Plus, Check, ExternalLink } from 'lucide-react'
+import { Loader2, Send, Check, Scissors, ExternalLink } from 'lucide-react'
 
 const PLATFORMS = [
-  { id: 'twitter',   label: 'X / Twitter',    icon: Twitter,   color: 'border-sky-500/20 bg-sky-500/[0.04]' },
-  { id: 'instagram', label: 'Instagram Reels', icon: Instagram, color: 'border-pink-500/20 bg-pink-500/[0.04]' },
-  { id: 'youtube',   label: 'YouTube Shorts',  icon: Youtube,   color: 'border-red-500/20 bg-red-500/[0.04]' },
-  { id: 'linkedin',  label: 'LinkedIn',        icon: Send,      color: 'border-blue-500/20 bg-blue-500/[0.04]' },
+  { id: 'tiktok',    label: 'TikTok',          icon: '📱', desc: 'Short-form video, up to 10 min', color: 'border-pink-500/20 hover:border-pink-500/40 hover:bg-pink-500/[0.04]' },
+  { id: 'instagram', label: 'Instagram Reels',  icon: '📸', desc: 'Up to 90 seconds, vertical', color: 'border-violet-500/20 hover:border-violet-500/40 hover:bg-violet-500/[0.04]' },
+  { id: 'youtube',   label: 'YouTube Shorts',   icon: '🎬', desc: 'Up to 60 seconds, vertical', color: 'border-red-500/20 hover:border-red-500/40 hover:bg-red-500/[0.04]' },
+  { id: 'linkedin',  label: 'LinkedIn',          icon: '💼', desc: 'Up to 10 min, all orientations', color: 'border-blue-500/20 hover:border-blue-500/40 hover:bg-blue-500/[0.04]' },
+  { id: 'twitter',   label: 'X (Twitter)',       icon: '🐦', desc: 'Up to 2:20, horizontal preferred', color: 'border-white/20 hover:border-white/40 hover:bg-white/[0.04]' },
 ]
 
-interface Clip { id: string; title: string; status: string; mux_playback_id: string | null; created_at: string }
-interface Publish { id: string; clip_id: string; platform: string; status: string; published_at: string | null; views: number }
-
-export default function PublishPage() {
+export default function PublishQueuePage() {
   const supabase = createClient()
-  const [clips, setClips] = useState<Clip[]>([])
-  const [publishes, setPublishes] = useState<Publish[]>([])
-  const [brand, setBrand] = useState<any>(null)
+  const [clips, setClips] = useState<any[]>([])
+  const [queued, setQueued] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [publishing, setPublishing] = useState<string | null>(null)
-  const [selected, setSelected] = useState<Record<string, string[]>>({})
+  const [selectedClip, setSelectedClip] = useState<string | null>(null)
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
+  const [publishing, setPublishing] = useState(false)
+  const [published, setPublished] = useState<string[]>([])
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return setLoading(false)
-      const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
-      setBrand(b)
+      const { data: b } = await supabase.from('brands').select('id').eq('user_id', user.id).eq('is_default', true).single()
       if (b) {
-        const [{ data: c }, { data: p }] = await Promise.all([
+        const [{ data: c }, { data: q }] = await Promise.all([
           supabase.from('clips').select('*').eq('brand_id', b.id).order('created_at', { ascending: false }),
-          supabase.from('clip_publishes').select('*').order('created_at', { ascending: false }),
+          supabase.from('clip_publishes').select('*, clips(title)').eq('clips.brand_id', b.id).order('created_at', { ascending: false }).limit(20),
         ])
         setClips(c || [])
-        setPublishes(p || [])
+        setQueued(q || [])
       }
       setLoading(false)
     }
     load()
   }, [])
 
-  const togglePlatform = (clipId: string, platform: string) => {
-    setSelected(s => {
-      const current = s[clipId] || []
-      return { ...s, [clipId]: current.includes(platform) ? current.filter(p => p !== platform) : [...current, platform] }
-    })
-  }
+  const togglePlatform = (id: string) => setSelectedPlatforms(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])
 
-  const handlePublish = async (clipId: string) => {
-    const platforms = selected[clipId] || []
-    if (!platforms.length) return
-    setPublishing(clipId)
-    try {
-      const inserts = platforms.map(platform => ({ clip_id: clipId, platform, status: 'queued' }))
-      await supabase.from('clip_publishes').insert(inserts)
-      const { data: p } = await supabase.from('clip_publishes').select('*').order('created_at', { ascending: false })
-      setPublishes(p || [])
-      setSelected(s => ({ ...s, [clipId]: [] }))
-    } finally {
-      setPublishing(null)
+  const handleQueue = async () => {
+    if (!selectedClip || !selectedPlatforms.length) return
+    setPublishing(true)
+    for (const platform of selectedPlatforms) {
+      await supabase.from('clip_publishes').insert({ clip_id: selectedClip, platform, status: 'queued' })
     }
+    setPublished(selectedPlatforms)
+    setPublishing(false)
+    // Refresh queued
+    const { data: q } = await supabase.from('clip_publishes').select('*').eq('clip_id', selectedClip)
+    setQueued(prev => [...(q || []), ...prev])
+    setTimeout(() => { setSelectedClip(null); setSelectedPlatforms([]); setPublished([]) }, 3000)
   }
 
-  const getPublishesForClip = (clipId: string) => publishes.filter(p => p.clip_id === clipId)
-  const statusColor = (s: string) => ({ queued: 'text-yellow-400', published: 'text-emerald-400', failed: 'text-red-400' }[s] || 'text-white/30')
-
-  if (loading) return <div className="flex h-48 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/20" /></div>
+  if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/20" /></div>
 
   return (
     <div className="max-w-5xl space-y-6">
       <div>
         <h1 className="text-2xl font-black text-white tracking-tight">Publish Queue</h1>
-        <p className="mt-1 text-sm text-white/40">Select platforms and queue clips for publishing</p>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: 'Queued',    value: publishes.filter(p => p.status === 'queued').length },
-          { label: 'Published', value: publishes.filter(p => p.status === 'published').length },
-          { label: 'Total clips', value: clips.length },
-        ].map(({ label, value }) => (
-          <div key={label} className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-4">
-            <p className="text-xs text-white/30 mb-1">{label}</p>
-            <p className="text-2xl font-black text-white">{value}</p>
-          </div>
-        ))}
+        <p className="mt-1 text-sm text-white/40">Queue clips for publishing across social platforms</p>
       </div>
 
       {clips.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-emerald-400/15 p-16 text-center">
-          <Send size={28} className="mx-auto mb-3 text-white/10" />
-          <p className="text-sm text-white/30 mb-3">No clips to publish yet</p>
-          <a href="/dashboard/clips" className="text-sm text-emerald-400 hover:text-emerald-300">Create your first clip →</a>
+          <Scissors size={24} className="mx-auto mb-3 text-white/10" />
+          <p className="text-sm text-white/30 mb-3">No clips yet — create one first</p>
+          <a href="/dashboard/clips" className="text-sm text-emerald-400 hover:text-emerald-300">Create a clip →</a>
         </div>
       ) : (
-        <div className="space-y-4">
-          {clips.map(clip => {
-            const clipPublishes = getPublishesForClip(clip.id)
-            const selectedPlatforms = selected[clip.id] || []
-            return (
-              <div key={clip.id} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-                <div className="flex items-center gap-4 p-4 border-b border-white/[0.07]">
-                  {/* Thumbnail */}
-                  <div className="h-14 w-24 shrink-0 rounded-lg bg-white/[0.06] overflow-hidden flex items-center justify-center">
-                    {clip.mux_playback_id ? (
-                      <img src={`https://image.mux.com/${clip.mux_playback_id}/thumbnail.jpg?time=1&width=96`} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <Send size={14} className="text-white/20" />
-                    )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Select clip */}
+          <div className="space-y-4">
+            <h2 className="text-sm font-bold text-white">1. Choose a clip</h2>
+            <div className="space-y-2">
+              {clips.map(clip => (
+                <button key={clip.id} onClick={() => setSelectedClip(clip.id === selectedClip ? null : clip.id)}
+                  className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${clip.id === selectedClip ? 'border-violet-500/40 bg-violet-500/[0.08]' : 'border-white/[0.07] bg-white/[0.02] hover:border-white/20'}`}>
+                  <div className="h-10 w-16 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0 overflow-hidden">
+                    {clip.mux_playback_id
+                      ? <img src={`https://image.mux.com/${clip.mux_playback_id}/thumbnail.jpg?time=1&width=64`} alt="" className="w-full h-full object-cover" />
+                      : <Scissors size={12} className="text-white/20" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{clip.title}</p>
-                    <p className="text-xs text-white/30 mt-0.5">{new Date(clip.created_at).toLocaleDateString()} · {clip.status}</p>
+                    <p className="text-sm font-medium text-white/80 truncate">{clip.title}</p>
+                    <p className="text-xs text-white/30">{new Date(clip.created_at).toLocaleDateString()}</p>
                   </div>
-                  <button
-                    onClick={() => handlePublish(clip.id)}
-                    disabled={!selectedPlatforms.length || publishing === clip.id}
-                    className="flex items-center gap-2 rounded-xl bg-emerald-400 px-4 py-2 text-xs font-bold text-[#08090A] hover:opacity-85 disabled:opacity-30 transition-opacity"
-                  >
-                    {publishing === clip.id ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-                    {publishing === clip.id ? 'Queuing...' : `Queue ${selectedPlatforms.length ? `(${selectedPlatforms.length})` : ''}`}
-                  </button>
-                </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${clip.status === 'ready' ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' : 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20'}`}>
+                    {clip.status}
+                  </span>
+                  {clip.id === selectedClip && <Check size={14} className="text-violet-400 shrink-0" />}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                {/* Platform selector */}
-                <div className="p-4">
-                  <p className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-3">Select platforms to publish</p>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {PLATFORMS.map(({ id, label, icon: Icon, color }) => {
-                      const isSelected = selectedPlatforms.includes(id)
-                      const published = clipPublishes.find(p => p.platform === id)
-                      return (
-                        <button key={id} onClick={() => togglePlatform(clip.id, id)}
-                          className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition-all ${
-                            published ? 'border-emerald-400/20 bg-emerald-400/[0.06] text-emerald-400' :
-                            isSelected ? 'border-violet-500/40 bg-violet-500/15 text-violet-300' :
-                            `${color} text-white/50 hover:text-white`
-                          }`}>
-                          {published ? <Check size={12} /> : <Icon size={12} />}
-                          <span className="truncate">{label}</span>
-                          {published && (
-                            <span className={`ml-auto text-[9px] font-bold uppercase ${statusColor(published.status)}`}>{published.status}</span>
-                          )}
-                        </button>
-                      )
-                    })}
+          {/* Select platforms */}
+          <div className="space-y-4">
+            <h2 className="text-sm font-bold text-white">2. Choose platforms</h2>
+            <div className="space-y-2">
+              {PLATFORMS.map(({ id, label, icon, desc, color }) => (
+                <button key={id} onClick={() => togglePlatform(id)}
+                  className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${selectedPlatforms.includes(id) ? 'border-violet-500/40 bg-violet-500/[0.08]' : `border-white/[0.07] bg-white/[0.02] ${color}`}`}>
+                  <span className="text-lg">{icon}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white/80">{label}</p>
+                    <p className="text-xs text-white/30">{desc}</p>
                   </div>
-                </div>
+                  {selectedPlatforms.includes(id) && <Check size={14} className="text-violet-400 shrink-0" />}
+                </button>
+              ))}
+            </div>
 
-                {/* Published history for this clip */}
-                {clipPublishes.length > 0 && (
-                  <div className="border-t border-white/[0.07] px-4 py-3 flex flex-wrap gap-2">
-                    {clipPublishes.map(p => (
-                      <div key={p.id} className="flex items-center gap-1.5 rounded-lg border border-white/[0.07] px-2.5 py-1">
-                        <span className={`text-[10px] font-semibold capitalize ${statusColor(p.status)}`}>{p.platform}</span>
-                        <span className="text-[10px] text-white/20">·</span>
-                        <span className={`text-[10px] ${statusColor(p.status)}`}>{p.status}</span>
-                        {p.views > 0 && <span className="text-[10px] text-white/30">{p.views} views</span>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+            <button onClick={handleQueue} disabled={!selectedClip || !selectedPlatforms.length || publishing}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 text-sm font-bold text-white hover:bg-violet-500 disabled:opacity-50 transition-colors">
+              {publishing ? <Loader2 size={14} className="animate-spin" /> : published.length > 0 ? <Check size={14} /> : <Send size={14} />}
+              {publishing ? 'Queuing...' : published.length > 0 ? `Queued to ${published.length} platform${published.length > 1 ? 's' : ''}!` : `Queue to ${selectedPlatforms.length || 0} platform${selectedPlatforms.length !== 1 ? 's' : ''}`}
+            </button>
+
+            <p className="text-xs text-center text-white/20">
+              Native platform integrations coming in Q3 2026.{' '}
+              <a href="/changelog" className="text-white/30 hover:text-white">See roadmap →</a>
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Note about real publishing */}
-      <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
-        <p className="text-xs text-white/30 leading-relaxed">
-          <strong className="text-white/50">Publishing integrations coming soon.</strong> Clips are queued in the database. Connect your social accounts via Settings to enable one-click publishing to X, Instagram Reels, YouTube Shorts, and LinkedIn.
-        </p>
-      </div>
+      {/* Queue history */}
+      {queued.length > 0 && (
+        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+          <div className="border-b border-white/[0.07] px-5 py-3">
+            <p className="text-sm font-semibold text-white">Queue history</p>
+          </div>
+          <div className="divide-y divide-white/[0.04]">
+            {queued.slice(0, 10).map((item, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-3">
+                <span className="text-lg">{PLATFORMS.find(p => p.id === item.platform)?.icon || '📤'}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-white/60">{PLATFORMS.find(p => p.id === item.platform)?.label || item.platform}</p>
+                </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                  item.status === 'published' ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' :
+                  item.status === 'queued' ? 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' :
+                  'text-white/30 bg-white/[0.04] border-white/[0.07]'}`}>
+                  {item.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -66,7 +66,14 @@ export default function VisibilityPage() {
       })
       const data = await res.json()
       if (data.error) { setScanStatus({ msg: `Error: ${data.error}`, type: 'error' }); return }
-      setScanStatus({ msg: `✓ Scanned ${data.scraped} queries — ${data.mentioned} mentions (${data.mentionRate}% rate)`, type: 'success' })
+      let msg = `✓ Scanned ${data.scraped} queries — ${data.mentioned} mentions (${data.mentionRate}% rate)`
+      if (data.competitorStats && Object.keys(data.competitorStats).length > 0) {
+        const compSummary = Object.entries(data.competitorStats as Record<string,number>)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(', ')
+        msg += ` · Competitors: ${compSummary}`
+      }
+      setScanStatus({ msg, type: 'success' })
       await loadData(brand.id)
     } catch { setScanStatus({ msg: 'Scan failed — check network', type: 'error' }) }
     finally {

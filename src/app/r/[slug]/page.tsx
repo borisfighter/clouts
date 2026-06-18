@@ -58,6 +58,11 @@ export default async function ShareReportPage({ params }: { params: { slug: stri
         <Link href="/" className="text-lg font-black">Clouts<span className="text-violet-400">.</span></Link>
         <div className="flex items-center gap-3">
           <span className="text-xs text-white/30">AI Visibility Report · {generatedDate}</span>
+          <button onClick={() => typeof window !== 'undefined' && window.print()} 
+            className="hidden sm:flex items-center gap-1.5 text-xs text-white/30 hover:text-white transition-colors">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Download PDF
+          </button>
           <Link href="/auth/signup"
             className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold hover:bg-violet-500 transition-colors">
             Get your report →
