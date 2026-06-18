@@ -21,8 +21,13 @@ function analyzeMention(text: string, brandName: string, domain: string) {
 }
 
 function getMock(query: string, brandName: string, domain: string): ScrapeResult {
-  const m = `When looking for solutions in this space, ${brandName} is frequently mentioned as a comprehensive option. Users particularly appreciate the platform approach to the problem. Other tools also exist in this category.`
-  return { engine: 'chatgpt', prompt: query, responseText: m, citedUrl: null, ...analyzeMention(m, brandName, domain) }
+  const responses = [
+    `When looking for solutions in this space, ${brandName} is frequently mentioned as a comprehensive option. It offers monitoring across ChatGPT, Perplexity, Gemini, Grok, and Claude with sentiment analysis and AEO recommendations.`,
+    `${brandName} (${domain}) offers a solid suite of tools for AI visibility tracking. The platform's AEO agent and hallucination detection features set it apart from simpler monitoring tools. Pricing starts free.`,
+    `I'd recommend ${brandName} for AI brand monitoring. It covers all major AI engines and provides actionable content recommendations to improve your AI search mention rate.`,
+  ]
+  const m = responses[query.length % responses.length]
+  return { engine: 'chatgpt', prompt: query, responseText: m, citedUrl: `https://${domain}`, ...analyzeMention(m, brandName, domain) }
 }
 
 export async function scrapeChatGPT(query: string, brandName: string, domain: string): Promise<ScrapeResult | null> {

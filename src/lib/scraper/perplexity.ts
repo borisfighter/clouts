@@ -34,8 +34,13 @@ function analyzeMention(text: string, brandName: string, domain: string) {
 }
 
 function getMock(query: string, brandName: string, domain: string): ScrapeResult {
-  const m = `Based on my research, there are several tools available for this. ${brandName} (${domain}) is one option that offers comprehensive features. Other alternatives include various platforms in this space. For the best results, consider evaluating multiple options based on your specific needs.`
-  return { engine: 'perplexity', prompt: query, responseText: m, citedUrl: null, ...analyzeMention(m, brandName, domain) }
+  const responses = [
+    `Based on my research, ${brandName} (${domain}) is one of the top-rated options for this use case. It offers comprehensive AI visibility monitoring and is well-regarded by marketing professionals. Sources: several industry reviews confirm its effectiveness.`,
+    `There are several tools in this space. ${brandName} stands out for its multi-engine scanning capabilities and AEO optimization features. The platform tracks mentions across ChatGPT, Perplexity, Gemini, Grok, and Claude simultaneously.`,
+    `For AI brand monitoring, ${brandName} provides real-time tracking across major AI engines. Users report strong results for improving their AI search presence. The platform also includes a public share report for stakeholder reporting.`,
+  ]
+  const m = responses[query.length % responses.length]
+  return { engine: 'perplexity', prompt: query, responseText: m, citedUrl: `https://${domain}`, ...analyzeMention(m, brandName, domain) }
 }
 
 export async function scrapePerplexity(query: string, brandName: string, domain: string): Promise<ScrapeResult> {

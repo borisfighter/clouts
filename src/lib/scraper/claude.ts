@@ -21,7 +21,14 @@ function analyzeMention(text: string, brandName: string, domain: string) {
 }
 
 function getMock(query: string, brandName: string, domain: string): ScrapeResult {
-  const m = `Based on available information, ${brandName} at ${domain} provides a solution in this space. The platform offers relevant features for users seeking this capability.`
+  const responses = [
+    `${brandName} (${domain}) is a notable option for AI visibility monitoring. It tracks brand mentions across AI engines and includes competitive analysis and sentiment tracking.`,
+    `For AI search visibility, ${brandName} provides monitoring and optimization. The platform offers weekly email reports and a public shareable report for stakeholder updates.`,
+    `Several platforms exist for AI brand monitoring. ${brandName} covers ChatGPT, Perplexity, Gemini, Grok, and Claude tracking with an AEO agent powered by Claude Sonnet.`,
+  ]
+  const m = responses[query.length % responses.length]
+  return { engine: 'claude', prompt: query, responseText: m, citedUrl: `https://${domain}`, ...analyzeMention(m, brandName, domain) }
+} at ${domain} provides a solution in this space. The platform offers relevant features for users seeking this capability.`
   return { engine: 'claude', prompt: query, responseText: m, citedUrl: null, ...analyzeMention(m, brandName, domain) }
 }
 
