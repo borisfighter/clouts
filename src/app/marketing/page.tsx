@@ -93,8 +93,8 @@ export default function MarketingPage() {
       <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-white/[0.07] bg-[#08090A]/90 px-6 md:px-12 backdrop-blur-md">
         <Link href="/" className="text-xl font-black tracking-tight">Clouts<span className="text-violet-400">.</span></Link>
         <div className="hidden items-center gap-8 md:flex">
-          {['Platform', 'Clips', 'Pricing'].map(item => (
-            <Link key={item} href={item === 'Pricing' ? '/pricing' : '#'}
+          {[['Platform', '#'], ['Clips', '#'], ['Pricing', '/pricing'], ['Changelog', '/changelog']].map(([item, href]) => (
+            <Link key={item} href={href}
               className="text-sm text-white/50 hover:text-white transition-colors">{item}</Link>
           ))}
         </div>
