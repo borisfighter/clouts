@@ -7,6 +7,7 @@ export interface ScrapeResult {
   position: number | null
   citedUrl: string | null
   score: number
+  competitorMentions?: Record<string, boolean>
 }
 
 const PERPLEXITY_API_KEY = (() => {

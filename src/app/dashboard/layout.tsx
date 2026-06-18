@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Radio, BarChart3, Scissors, Library,
-  Send, Bot, LineChart, Settings, Menu, ChevronDown, Zap, LogOut, Crown, Plus, Check
+  Send, Bot, LineChart, Settings, Menu, ChevronDown, Zap, LogOut, Crown, Plus, Check, TrendingUp
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -20,6 +20,7 @@ const navSections = [
       { href: '/dashboard/volumes',    icon: BarChart3,       label: 'Prompt Volumes' },
       { href: '/dashboard/agents',     icon: Bot,             label: 'Agents' },
       { href: '/dashboard/analytics',  icon: LineChart,       label: 'Analytics' },
+      { href: '/dashboard/competitors', icon: TrendingUp,     label: 'Competitors' },
     ],
   },
   {

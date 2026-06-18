@@ -20,7 +20,20 @@ export async function POST(req: NextRequest) {
   }
 
   const selectedEngines = (engines as Engine[]) || ['perplexity']
-  const results = await scrapeAllEngines(keywords, brand.name, brand.domain, selectedEngines)
+  const rawResults = await scrapeAllEngines(keywords, brand.name, brand.domain, selectedEngines)
+  
+  // Add competitor mention detection
+  const competitors: string[] = brand.competitors || []
+  const results = rawResults.map(r => {
+    if (!competitors.length) return r
+    const text = r.responseText.toLowerCase()
+    const competitorMentions: Record<string, boolean> = {}
+    competitors.forEach(c => {
+      const domain = c.toLowerCase().replace('www.', '').replace('https://', '').split('/')[0]
+      competitorMentions[c] = text.includes(domain)
+    })
+    return { ...r, competitorMentions }
+  })
 
   if (results.length > 0) {
     await supabase.from('mentions').insert(
@@ -50,10 +63,17 @@ export async function POST(req: NextRequest) {
     }).catch(() => {}) // non-blocking
   }
 
+  // Aggregate competitor mentions across all results
+  const competitorStats: Record<string, number> = {}
+  competitors.forEach(comp => {
+    competitorStats[comp] = results.filter(r => r.competitorMentions?.[comp]).length
+  })
+
   return NextResponse.json({
     scraped: results.length,
     mentioned,
     mentionRate,
+    competitorStats: competitors.length > 0 ? competitorStats : undefined,
     byEngine: selectedEngines.map(e => ({
       engine: e,
       count: results.filter(r => r.engine === e).length,

@@ -24,6 +24,8 @@ function SettingsInner() {
   const [userPlan, setUserPlan] = useState<string>('free')
   const [portalLoading, setPortalLoading] = useState(false)
   const [suggesting, setSuggesting] = useState(false)
+  const [shareSlug, setShareSlug] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const [name, setName] = useState('')
   const [domain, setDomain] = useState('')
@@ -42,6 +44,7 @@ function SettingsInner() {
       if (data) {
         setBrandId(data.id); setName(data.name || ''); setDomain(data.domain || '')
         setKeywords(data.keywords || []); setCompetitors(data.competitors || [])
+        setShareSlug(data.share_slug || null)
       }
       setFetching(false)
     }
@@ -196,17 +199,24 @@ function SettingsInner() {
       </form>
 
       {/* Share report */}
-      {brandId && (
+      {brandId && shareSlug && (
         <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-3">
           <h2 className="text-sm font-bold text-white">Share Report</h2>
-          <p className="text-xs text-white/40">Share a public AI visibility report for {name} with stakeholders, clients, or investors.</p>
+          <p className="text-xs text-white/40">Share a public AI visibility report for {name} with stakeholders, clients, or investors. No login required.</p>
           <div className="flex items-center gap-2">
-            <div className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs text-white/40 truncate font-mono">
-              clouts.com/r/{name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-...
+            <div className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs text-white/50 truncate font-mono">
+              clouts.com/r/{shareSlug}
             </div>
-            <a href={`/dashboard/visibility`}
+            <button onClick={() => {
+              navigator.clipboard.writeText(`https://www.clouts.com/r/${shareSlug}`)
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
+            }} className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs text-white/50 hover:text-white transition-colors whitespace-nowrap">
+              {copied ? '✓ Copied!' : 'Copy link'}
+            </button>
+            <a href={`/r/${shareSlug}`} target="_blank" rel="noopener"
               className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs text-white/50 hover:text-white transition-colors whitespace-nowrap">
-              View report →
+              Preview →
             </a>
           </div>
         </div>
