@@ -69,4 +69,41 @@ export const hourlyScrape = inngest.createFunction(
   }
 )
 
-export const functions = [scrapeBrand, hourlyScrape]
+// Weekly report: every Monday at 9am ET
+export const weeklyReport = inngest.createFunction(
+  { id: 'weekly-report' },
+  { cron: 'TZ=America/New_York 0 9 * * 1' },
+  async ({ step }) => {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { cookies: { getAll: () => [], setAll: () => {} } }
+    )
+    const { data: brands } = await supabase
+      .from('brands')
+      .select('id, name, users(email)')
+      .not('keywords', 'eq', '{}')
+
+    if (!brands?.length) return { sent: 0 }
+
+    let sent = 0
+    for (const b of brands) {
+      const email = (b.users as any)?.email
+      if (!email) continue
+      await step.run(`send-report-${b.id}`, async () => {
+        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/email/weekly-report`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.INNGEST_EVENT_KEY || ''}`,
+          },
+          body: JSON.stringify({ brandId: b.id, email, brandName: b.name }),
+        })
+        sent++
+      })
+    }
+    return { sent }
+  }
+)
+
+export const functions = [scrapeBrand, hourlyScrape, weeklyReport]

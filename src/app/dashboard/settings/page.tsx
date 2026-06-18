@@ -82,7 +82,15 @@ function SettingsInner() {
     await supabase.from('users').upsert({ id: user.id, email: user.email! }, { onConflict: 'id' })
 
     if (brandId) {
-      await supabase.from('brands').update({ name, domain, keywords, competitors }).eq('id', brandId)
+      const updates: any = { name, domain, keywords, competitors }
+      // Generate share slug if missing
+      if (!shareSlug) {
+        const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        const newSlug = slugBase + '-' + Math.random().toString(36).slice(2, 10)
+        updates.share_slug = newSlug
+        setShareSlug(newSlug)
+      }
+      await supabase.from('brands').update(updates).eq('id', brandId)
     } else {
       const { data } = await supabase.from('brands').insert({
         user_id: user.id, name, domain, keywords, competitors, is_default: true,
