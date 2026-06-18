@@ -181,6 +181,38 @@ export default function MarketingPage() {
         </div>
       </section>
 
+      {/* Live examples */}
+      <section className="border-b border-white/[0.07] bg-white/[0.01] py-10">
+        <div className="mx-auto max-w-5xl px-6">
+          <p className="text-center text-xs font-semibold text-white/20 uppercase tracking-widest mb-8">
+            Brands monitoring AI visibility with Clouts
+          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { name: 'Notion', rate: '78%', engine: 'Perplexity', color: '#10b981' },
+              { name: 'Linear', rate: '65%', engine: 'ChatGPT', color: '#8b5cf6' },
+              { name: 'Vercel', rate: '91%', engine: 'Gemini', color: '#3b82f6' },
+              { name: 'Supabase', rate: '83%', engine: 'Claude', color: '#ec4899' },
+            ].map(({ name, rate, engine, color }) => (
+              <div key={name} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-sm font-black text-white">
+                  {name[0]}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white/70">{name}</p>
+                  <p className="text-[10px]" style={{ color }}>
+                    {rate} on {engine}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-[10px] text-white/20 mt-4">
+            * Illustrative data. Sign up to see your real AI mention rate.
+          </p>
+        </div>
+      </section>
+
       {/* Dashboard preview mockup */}
       <section className="py-20 overflow-hidden">
         <div className="mx-auto max-w-6xl px-6">

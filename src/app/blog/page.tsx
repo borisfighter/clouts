@@ -17,7 +17,7 @@ const POSTS = [
     tagColor: 'bg-violet-500/20 text-violet-300',
   },
   {
-    slug: '/pricing',
+    slug: '/pricing',  // Full comparison on pricing page
     title: 'AI Visibility Tools Compared: Clouts vs Profound vs Visiblie',
     excerpt: 'An honest comparison of the top AI visibility monitoring platforms in 2026 — features, pricing, and what actually matters for growing brands.',
     date: 'June 2026',
@@ -35,9 +35,9 @@ const POSTS = [
     tagColor: 'bg-emerald-500/20 text-emerald-300',
   },
   {
-    slug: '/what-is-aeo',
-    title: 'Share of Voice in AI Search: What It Is and How to Measure It',
-    excerpt: 'Share of voice measures how often your brand appears vs competitors in AI-generated responses. Here\'s how to track it and improve it.',
+    slug: '/blog/ai-hallucination-detection',
+    title: 'AI Hallucination Detection: Protecting Your Brand from AI Misinformation',
+    excerpt: 'AI engines sometimes fabricate facts about your brand — wrong pricing, fake features, inaccurate comparisons. Learn how to detect and fix it before it costs you customers.',
     date: 'June 2026',
     readTime: '5 min read',
     tag: 'Metrics',
