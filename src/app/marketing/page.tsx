@@ -421,6 +421,7 @@ export default function MarketingPage() {
             <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <Link href="/changelog" className="hover:text-white transition-colors">Changelog</Link>
+            <Link href="/what-is-aeo" className="hover:text-white transition-colors">What is AEO?</Link>
           </div>
           <p className="text-xs text-white/20">© 2026 Clouts. All rights reserved.</p>
         </div>

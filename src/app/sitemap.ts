@@ -10,5 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/terms`,       lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
     { url: `${base}/privacy`,     lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
     { url: `${base}/changelog`,   lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${base}/what-is-aeo`,  lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
   ]
 }
