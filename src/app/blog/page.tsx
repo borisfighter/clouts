@@ -26,7 +26,7 @@ const POSTS = [
     tagColor: 'bg-blue-500/20 text-blue-300',
   },
   {
-    slug: '/pricing',
+    slug: '/blog/how-to-get-cited-in-chatgpt',
     title: 'How to Get Your Brand Cited in ChatGPT Answers',
     excerpt: 'A step-by-step guide to creating content that ChatGPT, Perplexity, and other AI engines will cite when answering questions in your category.',
     date: 'June 2026',

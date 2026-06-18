@@ -258,6 +258,13 @@ export default function VisibilityPage() {
                               {m.sentiment}
                             </span>
                           )}
+                          {m.cited_url && m.mentioned && (
+                            <a href={m.cited_url} target="_blank" rel="noopener"
+                              className="text-[10px] text-violet-400/60 hover:text-violet-400 truncate max-w-[80px]"
+                              title={m.cited_url}>
+                              ↗ cite
+                            </a>
+                          )}
                           {m.score != null && (
                             <span className={`text-xs font-black w-6 text-right ${m.score >= 70 ? 'text-emerald-400' : m.score >= 40 ? 'text-yellow-400' : 'text-white/40'}`}>
                               {m.score}

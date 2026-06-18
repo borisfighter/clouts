@@ -51,7 +51,13 @@ export default function DashboardPage() {
       engine, ...d, rate: d.total > 0 ? Math.round((d.mentioned / d.total) * 100) : 0
     })).sort((a, b) => b.rate - a.rate)
 
-    setStats({ mentionRate: total > 0 ? Math.round((mentioned / total) * 100) : null, totalScans: total, clips: clipCount || 0, avgScore })
+    const now = Date.now()
+    const last7 = (mentions || []).filter((m: any) => new Date(m.scraped_at).getTime() > now - 7 * 86400000)
+    const prev7 = (mentions || []).filter((m: any) => { const t = new Date(m.scraped_at).getTime(); return t > now - 14 * 86400000 && t <= now - 7 * 86400000 })
+    const last7Rate = last7.length > 0 ? Math.round((last7.filter((m: any) => m.mentioned).length / last7.length) * 100) : null
+    const prev7Rate = prev7.length > 0 ? Math.round((prev7.filter((m: any) => m.mentioned).length / prev7.length) * 100) : null
+    const weekTrend = last7Rate !== null && prev7Rate !== null ? last7Rate - prev7Rate : null
+    setStats({ mentionRate: total > 0 ? Math.round((mentioned / total) * 100) : null, totalScans: total, clips: clipCount || 0, avgScore, weekTrend } as any)
     setRecentMentions(mentions?.slice(0, 8) || [])
     setEngineStats(engineList)
   }
@@ -210,6 +216,11 @@ export default function DashboardPage() {
               <div key={label} className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-4">
                 <p className="text-xs text-white/30 mb-1">{label}</p>
                 <p className={`text-2xl font-black ${color}`}>{value}</p>
+                {label === 'AI Mention Rate' && (stats as any).weekTrend != null && (
+                  <p className={`text-[10px] mt-0.5 ${(stats as any).weekTrend >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {(stats as any).weekTrend >= 0 ? '+' : ''}{(stats as any).weekTrend}% vs last week
+                  </p>
+                )}
               </div>
             ))}
           </div>
