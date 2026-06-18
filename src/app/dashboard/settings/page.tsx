@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Loader2, Check, Plus, X, CreditCard, LogOut, Zap, Crown, Sparkles, Wand2 } from 'lucide-react'
+import { Save, Loader2, Check, Plus, X, CreditCard, LogOut, Zap, Crown, Sparkles, Wand2, Trash2, AlertTriangle } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 const PLAN_BADGES: Record<string, { label: string; color: string }> = {
@@ -26,6 +26,7 @@ function SettingsInner() {
   const [suggesting, setSuggesting] = useState(false)
   const [shareSlug, setShareSlug] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [deletingBrand, setDeletingBrand] = useState(false)
 
   const [name, setName] = useState('')
   const [domain, setDomain] = useState('')
@@ -53,6 +54,21 @@ function SettingsInner() {
 
   const addTag = (val: string, list: string[], setList: (v: string[]) => void, setInput: (v: string) => void) => {
     const v = val.trim(); if (v && !list.includes(v)) setList([...list, v]); setInput('')
+  }
+
+  const deleteBrand = async () => {
+    if (!brandId) return
+    if (!window.confirm(`Delete "${name}"? All scan data, clips, and agents will be permanently removed. This cannot be undone.`)) return
+    setDeletingBrand(true)
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      await supabase.from('mentions').delete().eq('brand_id', brandId)
+      await supabase.from('brands').delete().eq('id', brandId)
+      window.location.href = '/dashboard'
+    } catch {
+      setDeletingBrand(false)
+    }
   }
 
   const suggestKeywords = async () => {
@@ -282,14 +298,35 @@ function SettingsInner() {
         ))}
       </div>
 
+      {/* Danger zone */}
+      {brandId && (
+        <div className="rounded-2xl border border-red-500/15 bg-red-500/[0.03] p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={14} className="text-red-400/70" />
+            <h2 className="text-sm font-bold text-white">Danger zone</h2>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-white/60">Delete brand</p>
+              <p className="text-xs text-white/30 mt-0.5">Permanently remove {name} and all its scan data, clips, and agents.</p>
+            </div>
+            <button onClick={deleteBrand} disabled={deletingBrand}
+              className="flex items-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/[0.15] disabled:opacity-40 transition-colors whitespace-nowrap shrink-0">
+              {deletingBrand ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+              Delete brand
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Account */}
       <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-3">
         <h2 className="text-sm font-bold text-white">Account</h2>
         <button onClick={async () => { await supabase.auth.signOut(); router.push('/auth/login') }}
-          className="flex items-center gap-2 text-sm text-red-400/70 hover:text-red-400 transition-colors">
+          className="flex items-center gap-2 text-sm text-white/40 hover:text-white transition-colors">
           <LogOut size={14} /> Sign out
         </button>
-        <p className="text-xs text-white/20">To delete your account, email hello@clouts.com</p>
+        <p className="text-xs text-white/20">To delete your account, email <a href="mailto:hello@clouts.com" className="text-white/40 hover:text-white">hello@clouts.com</a></p>
       </div>
     </div>
   )

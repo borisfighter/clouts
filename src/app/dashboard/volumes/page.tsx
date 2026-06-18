@@ -63,7 +63,15 @@ export default function VolumesPage() {
     const { volume, trend, opportunity } = estimateVolume(newKw.trim())
     const kw = { query: newKw.trim(), estimated_volume: volume, opportunity_score: opportunity, trend, engines: ['chatgpt', 'perplexity', 'gemini'] }
     const { data } = await supabase.from('prompt_volumes').insert({ brand_id: brand.id, query: kw.query, estimated_volume: kw.estimated_volume, opportunity_score: kw.opportunity_score, engines: kw.engines }).select().single()
-    if (data) setKeywords(k => [{ ...kw, ...data }, ...k])
+    if (data) {
+      setKeywords(k => [{ ...kw, ...data }, ...k])
+      // Also save to brand.keywords so it shows in settings & scans
+      const currentKws = brand.keywords || []
+      if (!currentKws.includes(kw.query)) {
+        await supabase.from('brands').update({ keywords: [...currentKws, kw.query] }).eq('id', brand.id)
+        setBrand((b: any) => ({ ...b, keywords: [...currentKws, kw.query] }))
+      }
+    }
     setNewKw('')
     setAdding(false)
   }

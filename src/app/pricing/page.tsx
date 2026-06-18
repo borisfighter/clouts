@@ -25,7 +25,15 @@ export default function PricingPage() {
         body: JSON.stringify({ plan: planKey, interval }),
       })
       const { url, error } = await res.json()
-      if (error) { alert(error); return }
+      if (error) {
+        if (error.includes('not configured')) {
+          // Stripe not set up yet - show helpful message
+          alert('Payment processing is not configured yet. Contact hello@clouts.com to upgrade, or check back soon!')
+        } else {
+          alert(error)
+        }
+        return
+      }
       window.location.href = url
     } finally {
       setLoading(null)

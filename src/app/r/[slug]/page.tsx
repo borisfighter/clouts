@@ -12,9 +12,25 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const supabase = await createClient()
   const { data } = await supabase.from('brands').select('name, domain').eq('share_slug', params.slug).single()
   if (!data) return { title: 'Report not found | Clouts' }
+  
+  const title = `${data.name} AI Visibility Report`
+  const description = `See how ${data.name} (${data.domain}) appears across ChatGPT, Perplexity, Claude, Gemini, and Grok. Powered by Clouts AI Visibility.`
+  
   return {
-    title: `${data.name} AI Visibility Report | Clouts`,
-    description: `See how ${data.name} appears across ChatGPT, Perplexity, Claude, Gemini, and Grok.`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `https://www.clouts.com/r/${params.slug}`,
+      siteName: 'Clouts',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    },
   }
 }
 

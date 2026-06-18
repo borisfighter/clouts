@@ -19,10 +19,8 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json()
   const { name, domain, keywords = [], competitors = [] } = body
-
   if (!name || !domain) return NextResponse.json({ error: 'name and domain required' }, { status: 400 })
 
-  // Upsert user row
   await supabase.from('users').upsert({ id: user.id, email: user.email! }, { onConflict: 'id' })
 
   const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -36,17 +34,34 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ brand: data })
 }
 
-// PATCH /api/brands — set default brand
+// PATCH /api/brands — update brand fields or switch default
 export async function PATCH(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { brandId } = await req.json()
+  const body = await req.json()
+  const { brandId, name, domain, keywords, competitors, is_default } = body
 
-  // Clear all defaults, then set the new one
-  await supabase.from('brands').update({ is_default: false }).eq('user_id', user.id)
-  await supabase.from('brands').update({ is_default: true }).eq('id', brandId).eq('user_id', user.id)
+  if (!brandId) return NextResponse.json({ error: 'brandId required' }, { status: 400 })
 
+  // If switching default brand
+  if (is_default === true) {
+    await supabase.from('brands').update({ is_default: false }).eq('user_id', user.id)
+    await supabase.from('brands').update({ is_default: true }).eq('id', brandId).eq('user_id', user.id)
+    return NextResponse.json({ ok: true })
+  }
+
+  // General field update
+  const updates: any = {}
+  if (name        !== undefined) updates.name        = name
+  if (domain      !== undefined) updates.domain      = domain
+  if (keywords    !== undefined) updates.keywords    = keywords
+  if (competitors !== undefined) updates.competitors = competitors
+
+  if (Object.keys(updates).length === 0) return NextResponse.json({ ok: true })
+
+  const { error } = await supabase.from('brands').update(updates).eq('id', brandId).eq('user_id', user.id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

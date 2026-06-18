@@ -82,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     await fetch('/api/brands', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brandId }),
+      body: JSON.stringify({ brandId, is_default: true }),
     })
     const newActive = brands.find(b => b.id === brandId)
     setActiveBrand(newActive)

@@ -107,13 +107,15 @@ export default function AnalyticsPage() {
         {[
           { label: 'Total queries', value: mentions.length || '—', icon: Globe },
           { label: 'Mention rate', value: mentions.length ? `${mentionRate}%` : '—', icon: TrendingUp,
-            color: mentionRate >= 50 ? 'text-emerald-400' : mentionRate >= 25 ? 'text-yellow-400' : mentions.length ? 'text-red-400' : 'text-white' },
+            color: mentionRate >= 50 ? 'text-emerald-400' : mentionRate >= 25 ? 'text-yellow-400' : mentions.length ? 'text-red-400' : 'text-white',
+            sub: trend !== null ? `${trend >= 0 ? '+' : ''}${trend}% vs prev week` : undefined },
           { label: 'Avg score', value: avgScore || '—', icon: BarChart3 },
           { label: 'Engines', value: byEngine.length || '—', icon: Bot },
-        ].map(({ label, value, icon: Icon, color }) => (
+        ].map(({ label, value, icon: Icon, color, sub }: any) => (
           <div key={label} className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-4">
             <div className="flex items-center gap-2 mb-2"><Icon size={13} className="text-white/30" /><p className="text-xs text-white/30">{label}</p></div>
             <p className={`text-2xl font-black ${color || 'text-white'}`}>{value}</p>
+            {sub && <p className={`text-[10px] mt-0.5 ${(sub as string).startsWith('+') ? 'text-emerald-400' : (sub as string).startsWith('-') ? 'text-red-400' : 'text-white/30'}`}>{sub as string}</p>}
           </div>
         ))}
       </div>
