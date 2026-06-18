@@ -28,8 +28,6 @@ function getMock(query: string, brandName: string, domain: string): ScrapeResult
   ]
   const m = responses[query.length % responses.length]
   return { engine: 'claude', prompt: query, responseText: m, citedUrl: `https://${domain}`, ...analyzeMention(m, brandName, domain) }
-} at ${domain} provides a solution in this space. The platform offers relevant features for users seeking this capability.`
-  return { engine: 'claude', prompt: query, responseText: m, citedUrl: null, ...analyzeMention(m, brandName, domain) }
 }
 
 export async function scrapeClaude(query: string, brandName: string, domain: string): Promise<ScrapeResult | null> {

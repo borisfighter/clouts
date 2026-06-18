@@ -135,26 +135,9 @@ export default function PricingPage() {
             </div>
           ))}
         </div>
-
-        {/* FAQ */}
-        <div className="mt-20 max-w-2xl mx-auto">
-          <h2 className="text-2xl font-black text-white text-center mb-8">Common questions</h2>
-          <div className="space-y-4">
-            {[
-              { q: 'Can I cancel anytime?', a: 'Yes. Cancel from your account settings at any time. You keep access until the end of your billing period.' },
-              { q: 'What AI engines do you monitor?', a: 'Free: Perplexity only. Pro/Team: ChatGPT, Perplexity, Gemini, Claude, Grok, Copilot, Meta AI, DeepSeek, and Google AIO.' },
-              { q: 'How does the clip feature work?', a: 'Upload a video or connect a source. Clouts auto-detects brand mentions and clips them into shareable moments optimized for TikTok, Reels, and YouTube Shorts.' },
-              { q: 'Do you offer a free trial?', a: 'The Free plan is forever free — no credit card required. Pro and Team can be tested with the Free plan first.' },
-            ].map(({ q, a }) => (
-              <div key={q} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-5">
-                <p className="text-sm font-semibold text-white mb-1.5">{q}</p>
-                <p className="text-sm text-white/40">{a}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
-    {/* Competitor comparison */}
+
+      {/* Competitor comparison */}
       <section className="border-t border-white/[0.07] bg-white/[0.01] py-20">
         <div className="mx-auto max-w-5xl px-6">
           <div className="text-center mb-10">
@@ -224,7 +207,7 @@ export default function PricingPage() {
             {[
               { q: 'How does Clouts monitor AI engines?', a: 'We query ChatGPT, Perplexity, Claude, Gemini, and Grok with your tracked keywords and analyze every response to see if — and how — your brand is mentioned. You get mention rate, sentiment, position, and score for each engine.' },
               { q: 'Is there a free trial?', a: 'Yes — the Free plan is free forever (no credit card required) with 1 brand, 100 mentions/mo, and Perplexity monitoring. Upgrade to Pro for all 5 engines, 10,000 mentions, and 5 brands.' },
-              { q: 'What is hallucination detection?', a: 'Our AEO agent analyzes AI response text to flag when an engine makes potentially inaccurate claims about your brand — wrong pricing, fabricated features, or misleading comparisons. You're alerted so you can create corrective content.' },
+              { q: 'What is hallucination detection?', a: 'Our AEO agent analyzes AI response text to flag when an engine makes potentially inaccurate claims about your brand — wrong pricing, fabricated features, or misleading comparisons. You are alerted so you can create corrective content.' },
               { q: 'Can I cancel anytime?', a: 'Yes. Cancel anytime from the Billing section in Settings. You keep access until the end of your billing period.' },
               { q: 'What is the AEO Agent?', a: 'The AEO (Answer Engine Optimization) Agent is powered by Claude claude-sonnet-4-6. It analyzes your scan data and generates a prioritized content roadmap — FAQ pages, comparison articles, and guides — specifically designed to get your brand cited more often in AI responses.' },
             ].map(({ q, a }) => (

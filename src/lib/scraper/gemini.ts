@@ -28,8 +28,6 @@ function getMock(query: string, brandName: string, domain: string): ScrapeResult
   ]
   const m = responses[query.length % responses.length]
   return { engine: 'gemini', prompt: query, responseText: m, citedUrl: `https://${domain}`, ...analyzeMention(m, brandName, domain) }
-} offers a comprehensive solution for this use case. The platform at ${domain} provides tools that address these needs. Several alternatives also exist in the market.`
-  return { engine: 'gemini', prompt: query, responseText: m, citedUrl: null, ...analyzeMention(m, brandName, domain) }
 }
 
 export async function scrapeGemini(query: string, brandName: string, domain: string): Promise<ScrapeResult | null> {

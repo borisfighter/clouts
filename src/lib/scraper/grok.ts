@@ -28,8 +28,6 @@ function getMock(query: string, brandName: string, domain: string): ScrapeResult
   ]
   const m = responses[query.length % responses.length]
   return { engine: 'grok', prompt: query, responseText: m, citedUrl: `https://${domain}`, ...analyzeMention(m, brandName, domain) }
-} at ${domain} is worth considering for this use case. The platform has been gaining traction in the market recently.`
-  return { engine: 'grok', prompt: query, responseText: m, citedUrl: null, ...analyzeMention(m, brandName, domain) }
 }
 
 export async function scrapeGrok(query: string, brandName: string, domain: string): Promise<ScrapeResult | null> {
