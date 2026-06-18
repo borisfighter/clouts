@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const [engineStats, setEngineStats] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [scanning, setScanning] = useState(false)
+  const [userPlan, setUserPlan] = useState<string>('free')
   const [scanMsg, setScanMsg] = useState('')
 
   async function loadData(brandId: string) {
@@ -53,6 +54,8 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return setLoading(false)
       setUser(user)
+      const { data: planData } = await supabase.from('users').select('plan').eq('id', user.id).single()
+      if (planData) setUserPlan(planData.plan || 'free')
       const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
       setBrand(b)
       if (b) await loadData(b.id)
