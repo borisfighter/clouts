@@ -72,6 +72,17 @@ export default function AnalyticsPage() {
   }, {})
   const sentTotal = Object.values(sentiments).reduce((a: any, b: any) => a + b, 0) as number
 
+  // Week-over-week trend (last 7d vs previous 7d)
+  const nowMs = Date.now()
+  const last7dMentions = mentions.filter(m => new Date(m.scraped_at).getTime() > nowMs - 7 * 86400000)
+  const prev7dMentions = mentions.filter(m => {
+    const t = new Date(m.scraped_at).getTime()
+    return t > nowMs - 14 * 86400000 && t <= nowMs - 7 * 86400000
+  })
+  const last7Rate = last7dMentions.length > 0 ? Math.round((last7dMentions.filter(m => m.mentioned).length / last7dMentions.length) * 100) : null
+  const prev7Rate = prev7dMentions.length > 0 ? Math.round((prev7dMentions.filter(m => m.mentioned).length / prev7dMentions.length) * 100) : null
+  const trend = last7Rate !== null && prev7Rate !== null ? last7Rate - prev7Rate : null
+
   if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/20" /></div>
 
   return (
