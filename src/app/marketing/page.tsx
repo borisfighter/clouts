@@ -100,7 +100,7 @@ export default function MarketingPage() {
       <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-white/[0.07] bg-[#08090A]/90 px-6 md:px-12 backdrop-blur-md">
         <Link href="/" className="text-xl font-black tracking-tight">Clouts<span className="text-violet-400">.</span></Link>
         <div className="hidden items-center gap-8 md:flex">
-          {[['Platform', '#'], ['Clips', '#'], ['Pricing', '/pricing'], ['Agencies', '/agencies'], ['Blog', '/blog']].map(([item, href]) => (
+          {[['Demo', '/demo'], ['Pricing', '/pricing'], ['Agencies', '/agencies'], ['Blog', '/blog']].map(([item, href]) => (
             <Link key={item} href={href}
               className="text-sm text-white/50 hover:text-white transition-colors">{item}</Link>
           ))}
@@ -142,8 +142,8 @@ export default function MarketingPage() {
               className="flex items-center gap-2 rounded-2xl bg-violet-600 px-8 py-4 text-base font-bold text-white hover:bg-violet-500 transition-all shadow-lg shadow-violet-500/20">
               Start monitoring free <ArrowRight size={16} />
             </Link>
-            <Link href="/pricing" className="flex items-center gap-1.5 text-sm text-white/40 hover:text-white transition-colors">
-              View pricing <ChevronRight size={14} />
+            <Link href="/demo" className="flex items-center gap-1.5 text-sm text-white/40 hover:text-white transition-colors">
+              See live demo <ChevronRight size={14} />
             </Link>
           </div>
           <p className="text-xs text-white/20">Free forever · No credit card · Live in 2 minutes</p>

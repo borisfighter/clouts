@@ -16,5 +16,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/blog/how-to-get-cited-in-chatgpt`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/blog/ai-share-of-voice`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/blog/ai-hallucination-detection`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${base}/demo`,         lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
   ]
 }
