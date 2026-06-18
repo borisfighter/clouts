@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { OnboardingChecklist } from '@/components/OnboardingChecklist'
 import { Radio, TrendingUp, Scissors, Bot, ArrowUpRight, Loader2, RefreshCw, Zap, Crown, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -19,6 +20,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [scanning, setScanning] = useState(false)
   const [userPlan, setUserPlan] = useState<string>('free')
+  const [agentRan, setAgentRan] = useState(false)
+  const [shareSlug, setShareSlug] = useState<string | null>(null)
   const [scanMsg, setScanMsg] = useState('')
 
   async function loadData(brandId: string) {
@@ -57,6 +60,11 @@ export default function DashboardPage() {
       const { data: planData } = await supabase.from('users').select('plan').eq('id', user.id).single()
       if (planData) setUserPlan(planData.plan || 'free')
       const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
+      if (b) {
+        setShareSlug(b.share_slug || null)
+        const { count: agentCount } = await supabase.from('agents').select('*', { count: 'exact', head: true }).eq('brand_id', b.id).gt('last_run_at', '2000-01-01')
+        setAgentRan((agentCount || 0) > 0)
+      }
       setBrand(b)
       if (b) await loadData(b.id)
       setLoading(false)
@@ -113,6 +121,17 @@ export default function DashboardPage() {
           </button>
         )}
       </div>
+
+      {/* Onboarding checklist */}
+      {brand && (
+        <OnboardingChecklist steps={[
+          { id: 'brand',    label: 'Set up your brand',          done: !!brand,                        href: '/dashboard/settings' },
+          { id: 'keywords', label: 'Add tracking keywords',      done: (brand?.keywords?.length || 0) > 0, href: '/dashboard/settings' },
+          { id: 'scan',     label: 'Run your first AI scan',     done: stats.totalScans > 0,           href: '/dashboard/visibility' },
+          { id: 'agent',    label: 'Run the AEO agent',          done: agentRan,                       href: '/dashboard/agents' },
+          { id: 'share',    label: 'Share your visibility report', done: !!shareSlug,                  href: '/dashboard/settings' },
+        ]} />
+      )}
 
       {scanMsg && (
         <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.08] px-4 py-2.5 text-sm text-violet-300">
