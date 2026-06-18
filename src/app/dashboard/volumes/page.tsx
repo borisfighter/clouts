@@ -26,6 +26,7 @@ export default function VolumesPage() {
   const [loading, setLoading] = useState(true)
   const [newKw, setNewKw] = useState('')
   const [adding, setAdding] = useState(false)
+  const [filter, setFilter] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -81,7 +82,8 @@ export default function VolumesPage() {
     setKeywords(k => k.filter(x => x.id !== id))
   }
 
-  const sortedKws = [...keywords].sort((a, b) => (b.opportunity_score || 0) - (a.opportunity_score || 0))
+  const filteredKws = filter ? keywords.filter(k => k.query?.toLowerCase().includes(filter.toLowerCase())) : keywords
+  const sortedKws = [...filteredKws].sort((a, b) => (b.opportunity_score || 0) - (a.opportunity_score || 0))
   const totalVolume = keywords.reduce((s, k) => s + (k.estimated_volume || 0), 0)
   const avgOpportunity = keywords.length ? Math.round(keywords.reduce((s, k) => s + (k.opportunity_score || 0), 0) / keywords.length) : 0
 

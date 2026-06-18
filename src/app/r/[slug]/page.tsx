@@ -216,6 +216,20 @@ export default async function ShareReportPage({ params }: { params: { slug: stri
           </div>
         )}
 
+        {/* Embed badge */}
+        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-3">
+          <h2 className="text-sm font-bold text-white">Embed this report</h2>
+          <p className="text-xs text-white/40">Add an AI visibility badge to your website, README, or marketing materials.</p>
+          <div className="rounded-xl border border-white/[0.07] bg-black/40 p-3 font-mono text-[11px] text-white/50 overflow-x-auto">
+            {`<a href="https://www.clouts.com/r/${params.slug}"><img src="https://www.clouts.com/api/badge?slug=${params.slug}" alt="AI Visibility" /></a>`}
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Badge preview */}
+            <img src={`/api/badge?slug=${params.slug}`} alt="AI Visibility badge" />
+            <span className="text-xs text-white/30">Preview</span>
+          </div>
+        </div>
+
         {/* CTA */}
         <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.06] p-8 text-center">
           <p className="text-lg font-black text-white mb-2">Monitor your own brand in AI search</p>
