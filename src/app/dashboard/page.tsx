@@ -69,7 +69,7 @@ export default function DashboardPage() {
       const res = await fetch('/api/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brandId: brand.id, engines: ['perplexity'] }),
+        body: JSON.stringify({ brandId: brand.id, engines: userPlan === 'free' ? ['perplexity'] : ['perplexity', 'chatgpt', 'gemini', 'grok', 'claude'] }),
       })
       const data = await res.json()
       if (data.error) { setScanMsg(`Error: ${data.error}`); return }
