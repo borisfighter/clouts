@@ -25,8 +25,11 @@ export async function POST(req: NextRequest) {
   // Upsert user row
   await supabase.from('users').upsert({ id: user.id, email: user.email! }, { onConflict: 'id' })
 
+  const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  const share_slug = slugBase + '-' + Math.random().toString(36).slice(2, 10)
+
   const { data, error } = await supabase.from('brands').insert({
-    user_id: user.id, name, domain, keywords, competitors, is_default: false,
+    user_id: user.id, name, domain, keywords, competitors, is_default: false, share_slug,
   }).select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

@@ -8,16 +8,24 @@ export async function GET() {
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey || serviceKey.includes('REPLACE')) {
-    // Return stub data when service role key not configured
+    // Use public function for aggregate stats (no service role key needed)
+    const anonClient = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => [], setAll: () => {} } }
+    )
+    const { data: stats } = await anonClient.rpc('get_platform_stats')
+    const s = stats as any || {}
     return NextResponse.json({
-      users: { total: 0, last30: 0, last7: 0, today: 0 },
-      brands: { total: 0 },
-      mentions: { total: 0, last7: 0 },
-      clips: { total: 0 },
-      plans: { free: 0 },
+      users:    { total: s.user_count || 0,    last30: 0, last7: 0, today: 0 },
+      brands:   { total: s.brand_count || 0 },
+      mentions: { total: s.mention_count || 0, last7: 0 },
+      clips:    { total: s.clip_count || 0 },
+      agents:   { total: s.agent_count || 0, runs: s.agent_run_count || 0 },
+      plans: { free: s.user_count || 0 },
       recentUsers: [],
       topBrands: [],
-      _note: 'Add SUPABASE_SERVICE_ROLE_KEY to see real stats',
+      _partial: true,
     })
   }
 

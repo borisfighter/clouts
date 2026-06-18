@@ -42,6 +42,11 @@ export default function AdminOverviewPage() {
           <h1 className="text-2xl font-black text-white">Admin Overview</h1>
           <p className="text-sm text-white/40 mt-1">Real-time platform metrics</p>
         </div>
+{data._partial && (
+          <div className="mb-4 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.06] px-4 py-2.5 text-xs text-yellow-300">
+            Showing aggregate counts only. Add <code className="font-mono bg-white/10 px-1 py-0.5 rounded">SUPABASE_SERVICE_ROLE_KEY</code> in Vercel for full admin data.
+          </div>
+        )}
         <button onClick={load} className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/50 hover:text-white transition-colors">
           <RefreshCw size={12} /> Refresh
         </button>

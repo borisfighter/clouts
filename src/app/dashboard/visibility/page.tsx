@@ -113,6 +113,20 @@ export default function VisibilityPage() {
               </button>
             ))}
           </div>
+          {brand?.share_slug && (
+            <div className="flex items-center gap-1">
+              <a href={`/r/${brand.share_slug}`} target="_blank" rel="noopener"
+                className="flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/50 hover:text-white hover:border-white/20 transition-colors">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Share
+              </a>
+              <button onClick={() => { navigator.clipboard.writeText(`https://www.clouts.com/r/${brand.share_slug}`); }}
+                className="flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/50 hover:text-white hover:border-white/20 transition-colors">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy link
+              </button>
+            </div>
+          )}
           {brand && (
             <button onClick={runScan} disabled={scraping || !brand?.keywords?.length}
               className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50 transition-colors">

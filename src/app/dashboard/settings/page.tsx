@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Loader2, Check, Plus, X, CreditCard, LogOut, Zap, Crown, Sparkles } from 'lucide-react'
+import { Save, Loader2, Check, Plus, X, CreditCard, LogOut, Zap, Crown, Sparkles, Wand2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 const PLAN_BADGES: Record<string, { label: string; color: string }> = {
@@ -23,6 +23,7 @@ function SettingsInner() {
   const [brandId, setBrandId] = useState<string | null>(null)
   const [userPlan, setUserPlan] = useState<string>('free')
   const [portalLoading, setPortalLoading] = useState(false)
+  const [suggesting, setSuggesting] = useState(false)
 
   const [name, setName] = useState('')
   const [domain, setDomain] = useState('')
@@ -49,6 +50,25 @@ function SettingsInner() {
 
   const addTag = (val: string, list: string[], setList: (v: string[]) => void, setInput: (v: string) => void) => {
     const v = val.trim(); if (v && !list.includes(v)) setList([...list, v]); setInput('')
+  }
+
+  const suggestKeywords = async () => {
+    if (!name) return
+    setSuggesting(true)
+    try {
+      const res = await fetch('/api/suggestions/keywords', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, domain }),
+      })
+      const data = await res.json()
+      if (data.suggestions) {
+        const newKws = data.suggestions.filter((s: string) => !keywords.includes(s))
+        setKeywords(prev => [...prev, ...newKws].slice(0, 10))
+      }
+    } finally {
+      setSuggesting(false)
+    }
   }
 
   const handleSave = async (e: React.FormEvent) => {
@@ -129,6 +149,13 @@ function SettingsInner() {
               className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-violet-500/50" />
             <button type="button" onClick={() => addTag(kwInput, keywords, setKeywords, setKwInput)}
               className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-white/50 hover:text-white transition-colors"><Plus size={14} /></button>
+            {name && (
+              <button type="button" onClick={suggestKeywords} disabled={suggesting || !name}
+                className="flex items-center gap-1.5 rounded-xl border border-violet-500/20 bg-violet-500/[0.08] px-3 py-2 text-xs font-medium text-violet-400 hover:bg-violet-500/[0.15] disabled:opacity-40 transition-colors whitespace-nowrap">
+                {suggesting ? <Loader2 size={11} className="animate-spin" /> : <Wand2 size={11} />}
+                {suggesting ? 'Suggesting...' : 'AI suggest'}
+              </button>
+            )}
           </div>
           <div className="flex flex-wrap gap-2 min-h-[28px]">
             {keywords.map(kw => (
@@ -167,6 +194,23 @@ function SettingsInner() {
           {saved ? (isWelcome ? 'Saved! Redirecting...' : 'Saved!') : (isWelcome ? 'Save & start scanning' : 'Save brand')}
         </button>
       </form>
+
+      {/* Share report */}
+      {brandId && (
+        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-3">
+          <h2 className="text-sm font-bold text-white">Share Report</h2>
+          <p className="text-xs text-white/40">Share a public AI visibility report for {name} with stakeholders, clients, or investors.</p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs text-white/40 truncate font-mono">
+              clouts.com/r/{name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-...
+            </div>
+            <a href={`/dashboard/visibility`}
+              className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs text-white/50 hover:text-white transition-colors whitespace-nowrap">
+              View report →
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Plan & Billing */}
       <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-4">
