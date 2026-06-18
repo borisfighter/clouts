@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Radio, BarChart3, Scissors, Library,
-  Send, Bot, LineChart, Settings, Menu, ChevronDown, Zap, LogOut, Crown, Plus, Check, TrendingUp
+  Send, Bot, LineChart, Settings, Menu, ChevronDown, Zap, LogOut, Crown, Plus, Check, TrendingUp, Clock
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -21,6 +21,7 @@ const navSections = [
       { href: '/dashboard/agents',     icon: Bot,             label: 'Agents' },
       { href: '/dashboard/analytics',  icon: LineChart,       label: 'Analytics' },
       { href: '/dashboard/competitors', icon: TrendingUp,     label: 'Competitors' },
+      { href: '/dashboard/history',     icon: Clock,          label: 'Scan History' },
     ],
   },
   {

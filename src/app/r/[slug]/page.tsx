@@ -22,12 +22,12 @@ export default async function ShareReportPage({ params }: { params: { slug: stri
   const supabase = await createClient()
 
   const { data: brand } = await supabase
-    .from('brands').select('id, name, domain, keywords').eq('share_slug', params.slug).single()
+    .from('brands').select('id, name, domain, keywords, competitors').eq('share_slug', params.slug).single()
   if (!brand) notFound()
 
   const since = new Date(Date.now() - 30 * 86400000).toISOString()
   const { data: mentions } = await supabase.from('mentions')
-    .select('engine, prompt, mentioned, sentiment, score, scraped_at')
+    .select('engine, prompt, mentioned, sentiment, score, scraped_at, response_text')
     .eq('brand_id', brand.id).gte('scraped_at', since).order('scraped_at', { ascending: false }).limit(500)
 
   const total = mentions?.length || 0
@@ -142,6 +142,37 @@ export default async function ShareReportPage({ params }: { params: { slug: stri
             </div>
           </div>
         )}
+
+        {/* Competitor insights */}
+        {mentions && brand.competitors?.length > 0 && (() => {
+          const competitors: string[] = brand.competitors || []
+          const compRates = competitors.map((comp: string) => {
+            const matched = mentions?.filter((m: any) => m.response_text?.toLowerCase().includes(comp.toLowerCase())).length || 0
+            return { comp, rate: total > 0 ? Math.round((matched / total) * 100) : 0, matched }
+          }).sort((a: any, b: any) => b.rate - a.rate)
+          
+          return (
+            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6">
+              <h2 className="text-sm font-bold text-white mb-4">Competitive Landscape</h2>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-2.5 w-2.5 rounded-full bg-violet-500" />
+                  <span className="text-sm font-bold text-white flex-1">{brand.name} (you)</span>
+                  <div className="w-32"><div className="h-1.5 rounded-full bg-white/[0.05]"><div className="h-full rounded-full bg-violet-500/70" style={{ width: `${mentionRate}%` }} /></div></div>
+                  <span className={`text-sm font-black w-10 text-right ${mentionRate >= 50 ? 'text-emerald-400' : 'text-yellow-400'}`}>{mentionRate}%</span>
+                </div>
+                {compRates.map(({ comp, rate, matched }: any) => (
+                  <div key={comp} className="flex items-center gap-3">
+                    <div className={`h-2.5 w-2.5 rounded-full ${rate > mentionRate ? 'bg-red-400' : 'bg-white/20'}`} />
+                    <span className="text-sm text-white/60 flex-1">{comp}</span>
+                    <div className="w-32"><div className="h-1.5 rounded-full bg-white/[0.05]"><div className="h-full rounded-full bg-white/25" style={{ width: `${rate}%` }} /></div></div>
+                    <span className={`text-sm font-bold w-10 text-right ${rate > mentionRate ? 'text-red-400' : 'text-white/40'}`}>{rate}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Keywords tracked */}
         {brand.keywords?.length > 0 && (
