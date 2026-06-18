@@ -21,10 +21,11 @@ export function InsightsBanner({ mentionRate, avgScore, hasCitedUrls, sentiment 
   let tip: string
   let key: string
 
-  if (mentionRate < 25) { key = 'low_rate'; tip = ENGINE_TIPS.low_rate[0] }
-  else if (!hasCitedUrls) { key = 'no_citation'; tip = ENGINE_TIPS.no_citation[0] }
-  else if (sentiment === 'negative') { key = 'neg_sentiment'; tip = ENGINE_TIPS.neg_sentiment[0] }
-  else { key = 'multi_engine'; tip = ENGINE_TIPS.multi_engine[0] }
+  const tipIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 4)) % 3 // Rotate every 4 hours
+  if (mentionRate < 25) { key = 'low_rate'; tip = ENGINE_TIPS.low_rate[tipIndex % ENGINE_TIPS.low_rate.length] }
+  else if (!hasCitedUrls) { key = 'no_citation'; tip = ENGINE_TIPS.no_citation[tipIndex % ENGINE_TIPS.no_citation.length] }
+  else if (sentiment === 'negative') { key = 'neg_sentiment'; tip = ENGINE_TIPS.neg_sentiment[tipIndex % ENGINE_TIPS.neg_sentiment.length] }
+  else { key = 'multi_engine'; tip = ENGINE_TIPS.multi_engine[tipIndex % ENGINE_TIPS.multi_engine.length] }
 
   return (
     <div className="flex items-center gap-3 rounded-xl border border-yellow-500/15 bg-yellow-500/[0.05] px-4 py-3">
