@@ -413,6 +413,7 @@ export default function MarketingPage() {
             <Link href="/auth/signup" className="hover:text-white transition-colors">Sign up</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/changelog" className="hover:text-white transition-colors">Changelog</Link>
           </div>
           <p className="text-xs text-white/20">© 2026 Clouts. All rights reserved.</p>
         </div>

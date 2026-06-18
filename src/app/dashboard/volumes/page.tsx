@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { BarChart3, TrendingUp, Search, Loader2, RefreshCw, Zap } from 'lucide-react'
+import { BarChart3, TrendingUp, Search, Loader2, Zap, Trash2 } from 'lucide-react'
 
 // Estimated monthly query volumes for common AI query patterns
 function estimateVolume(keyword: string): { volume: number; trend: 'up' | 'flat' | 'down'; opportunity: number } {
@@ -66,6 +66,11 @@ export default function VolumesPage() {
     if (data) setKeywords(k => [{ ...kw, ...data }, ...k])
     setNewKw('')
     setAdding(false)
+  }
+
+  const deleteKeyword = async (id: string) => {
+    await supabase.from('prompt_volumes').delete().eq('id', id)
+    setKeywords(k => k.filter(x => x.id !== id))
   }
 
   const sortedKws = [...keywords].sort((a, b) => (b.opportunity_score || 0) - (a.opportunity_score || 0))
@@ -163,6 +168,11 @@ export default function VolumesPage() {
                   <span className={`text-sm font-bold w-8 text-right ${(kw.opportunity_score || 0) >= 70 ? 'text-emerald-400' : (kw.opportunity_score || 0) >= 40 ? 'text-yellow-400' : 'text-white/40'}`}>
                     {kw.opportunity_score || 0}
                   </span>
+                  {kw.id && (
+                    <button onClick={() => deleteKeyword(kw.id)} className="text-white/15 hover:text-red-400 transition-colors">
+                      <Trash2 size={12} />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

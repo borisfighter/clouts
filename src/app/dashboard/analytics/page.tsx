@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Globe, Bot, TrendingUp, Loader2, BarChart3, Minus } from 'lucide-react'
+import { Globe, Bot, TrendingUp, Loader2, BarChart3, Download } from 'lucide-react'
 
 const ENGINE_COLORS: Record<string, string> = {
   perplexity: '#8b5cf6', chatgpt: '#10b981', gemini: '#3b82f6',
@@ -81,13 +81,24 @@ export default function AnalyticsPage() {
           <h1 className="text-2xl font-black text-white tracking-tight">Analytics</h1>
           <p className="mt-1 text-sm text-white/40">{brand ? `AI visibility trends for ${brand.domain}` : 'Add a brand to see analytics'}</p>
         </div>
-        <div className="flex rounded-xl border border-white/[0.08] bg-white/[0.04] p-1 gap-1">
-          {(['7d', '30d', '90d'] as const).map(r => (
-            <button key={r} onClick={() => setRange(r)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${range === r ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}>
-              {r}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-xl border border-white/[0.08] bg-white/[0.04] p-1 gap-1">
+            {(['7d', '30d', '90d'] as const).map(r => (
+              <button key={r} onClick={() => setRange(r)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${range === r ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}>
+                {r}
+              </button>
+            ))}
+          </div>
+          {brand && mentions.length > 0 && (
+            <a
+              href={`/api/export/mentions?brandId=${brand.id}&days=${range === '7d' ? 7 : range === '30d' ? 30 : 90}`}
+              download
+              className="flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/50 hover:text-white hover:border-white/20 transition-colors"
+            >
+              <Download size={12} /> Export CSV
+            </a>
+          )}
         </div>
       </div>
 

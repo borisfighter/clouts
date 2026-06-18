@@ -16,7 +16,11 @@ export async function POST(req: NextRequest) {
   if (error || !clip) return NextResponse.json({ error: 'Failed to create clip' }, { status: 500 })
 
   // Mux upload if configured and source URL provided
-  if (process.env.MUX_TOKEN_ID && process.env.MUX_TOKEN_SECRET && sourceUrl) {
+  const muxId = process.env.MUX_TOKEN_ID
+  const muxSecret = process.env.MUX_TOKEN_SECRET
+  const muxConfigured = muxId && muxSecret && !muxId.includes('REPLACE') && !muxSecret.includes('REPLACE') && muxId.length > 5
+
+  if (muxConfigured && sourceUrl) {
     try {
       const { default: Mux } = await import('@mux/mux-node')
       const mux = new Mux({ tokenId: process.env.MUX_TOKEN_ID, tokenSecret: process.env.MUX_TOKEN_SECRET })
