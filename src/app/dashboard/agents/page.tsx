@@ -196,6 +196,29 @@ export default function AgentsPage() {
               </div>
             )}
           </div>
+          {/* Hallucination alerts */}
+          {analysis.hallucinations && analysis.hallucinations.length > 0 && (
+            <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.04] overflow-hidden">
+              <div className="border-b border-red-500/15 px-5 py-3.5 flex items-center gap-2">
+                <span className="text-sm font-semibold text-white">⚠ Accuracy Alerts</span>
+                <span className="text-xs text-red-400">AI engines may be misrepresenting your brand</span>
+              </div>
+              <div className="divide-y divide-white/[0.04]">
+                {analysis.hallucinations.map((h: any, i: number) => (
+                  <div key={i} className="px-5 py-4">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${h.severity === 'high' ? 'bg-red-400/15 text-red-400' : h.severity === 'medium' ? 'bg-yellow-400/15 text-yellow-400' : 'bg-white/[0.08] text-white/40'}`}>
+                        {h.severity}
+                      </span>
+                      <span className="text-xs font-semibold text-white capitalize">{h.engine}</span>
+                      <span className="text-xs text-white/40">— "{h.query}"</span>
+                    </div>
+                    <p className="text-xs text-white/60">{h.issue}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
