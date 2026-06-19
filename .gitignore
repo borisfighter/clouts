@@ -9,3 +9,4 @@ dist/
 *.tsbuildinfo
 .DS_Store
 .supabase/
+next-env.d.ts

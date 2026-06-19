@@ -12,9 +12,12 @@ const ENGINES = [
   { id: 'claude',     label: 'Claude',      plan: 'pro',  color: '#ec4899' },
 ]
 
+const ENGINE_COLORS: Record<string, string> = Object.fromEntries(ENGINES.map(e => [e.id, e.color]))
+
 interface Mention {
   id: string; engine: string; prompt: string; mentioned: boolean
   score: number | null; sentiment: string | null; scraped_at: string; response_text: string
+  cited_url: string | null
 }
 
 export default function VisibilityPage() {

@@ -38,7 +38,7 @@ export async function runAEOAgent(
 ): Promise<AEOAnalysis> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey || apiKey.includes('REPLACE') || apiKey.length < 20) {
-    return mockAEOAnalysis(brandName, mentions)
+    return mockAEOAnalysis(brandName, domain, keywords, mentions)
   }
 
   const client = new Anthropic({ apiKey })
@@ -102,11 +102,11 @@ Return ONLY valid JSON, no markdown fences, no explanation.`
     const clean = text.replace(/```json|```/g, '').trim()
     return JSON.parse(clean)
   } catch {
-    return mockAEOAnalysis(brandName, mentions)
+    return mockAEOAnalysis(brandName, domain, keywords, mentions)
   }
 }
 
-function mockAEOAnalysis(brandName: string, mentions: any[]): AEOAnalysis {
+function mockAEOAnalysis(brandName: string, domain: string, keywords: string[], mentions: any[]): AEOAnalysis {
   const mentioned = mentions.filter(m => m.mentioned).length
   const total = mentions.length
   const rate = total > 0 ? Math.round((mentioned / total) * 100) : 0

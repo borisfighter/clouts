@@ -27,7 +27,7 @@ export default function DashboardPage() {
 
   async function loadData(brandId: string) {
     const [{ data: mentions }, { count: clipCount }] = await Promise.all([
-      supabase.from('mentions').select('mentioned, score, engine, prompt, scraped_at, sentiment')
+      supabase.from('mentions').select('mentioned, score, engine, prompt, scraped_at, sentiment, cited_url')
         .eq('brand_id', brandId).order('scraped_at', { ascending: false }).limit(200),
       supabase.from('clips').select('*', { count: 'exact', head: true }).eq('brand_id', brandId),
     ])
