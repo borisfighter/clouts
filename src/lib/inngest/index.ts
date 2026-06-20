@@ -21,7 +21,7 @@ export const scrapeBrand = inngest.createFunction(
         { cookies: { getAll: () => [], setAll: () => {} } }
       )
       if (results.length > 0) {
-        await supabase.from('mentions').insert(
+        const { error } = await supabase.from('mentions').insert(
           results.map(r => ({
             brand_id: brandId, engine: r.engine, prompt: r.prompt,
             response_text: r.responseText, mentioned: r.mentioned,
@@ -29,6 +29,16 @@ export const scrapeBrand = inngest.createFunction(
             cited_url: r.citedUrl, score: r.score,
           }))
         )
+        if (error) {
+          // Supabase resolves with { error } on failure, it does not throw -
+          // this function previously discarded that result entirely, so a
+          // failed insert here looked identical to a successful one from
+          // Inngest's perspective: nothing thrown means the step is marked
+          // complete and the configured retries: 2 never engages, even
+          // though the scan data was never actually saved. Throwing here is
+          // what makes the existing retry config actually do anything.
+          throw new Error(`Failed to save mentions for brand ${brandId}: ${error.message}`)
+        }
       }
     })
 
@@ -91,7 +101,7 @@ export const weeklyReport = inngest.createFunction(
       const email = (b.users as any)?.email
       if (!email) continue
       await step.run(`send-report-${b.id}`, async () => {
-        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/email/weekly-report`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/email/weekly-report`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -99,6 +109,14 @@ export const weeklyReport = inngest.createFunction(
           },
           body: JSON.stringify({ brandId: b.id, email, brandName: b.name }),
         })
+        if (!res.ok) {
+          // fetch() only throws on network failure, not on a non-2xx
+          // response - without this check, a failed send (e.g. the email
+          // provider rejecting it) would resolve normally and silently
+          // count toward `sent` below, with no retry and no record that
+          // this brand's weekly report never actually went out.
+          throw new Error(`Failed to send weekly report for brand ${b.id}: HTTP ${res.status}`)
+        }
         sent++
       })
     }
