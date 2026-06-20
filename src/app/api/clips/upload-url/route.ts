@@ -19,9 +19,18 @@ export async function POST(req: NextRequest) {
     cors_origin: process.env.NEXT_PUBLIC_APP_URL || 'https://clouts.com',
   })
 
-  const { data: clip } = await supabase.from('clips').insert({
+  const { data: clip, error: clipErr } = await supabase.from('clips').insert({
     brand_id: brandId, title, status: 'awaiting_upload',
   }).select().single()
 
-  return NextResponse.json({ uploadUrl: upload.url, uploadId: upload.id, clipId: clip?.id })
+  if (clipErr || !clip) {
+    // A Mux upload URL was already created above at this point - if the
+    // clip row fails to save, returning 200 with clipId: undefined would
+    // leave the caller with a working upload URL but no clip to attach it
+    // to once the video finishes processing. Failing the request here is
+    // safer than letting a caller silently miss the missing clipId.
+    return NextResponse.json({ error: 'Failed to create clip record' }, { status: 500 })
+  }
+
+  return NextResponse.json({ uploadUrl: upload.url, uploadId: upload.id, clipId: clip.id })
 }

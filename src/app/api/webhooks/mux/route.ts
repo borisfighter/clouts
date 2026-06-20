@@ -15,17 +15,30 @@ export async function POST(req: NextRequest) {
     const { id: assetId, playback_ids, duration } = data
     const playbackId = playback_ids?.[0]?.id
 
-    await supabase.from('clips')
+    const { error } = await supabase.from('clips')
       .update({
         status: 'ready',
         mux_playback_id: playbackId,
         duration_sec: duration ? Math.round(duration) : null,
       })
       .eq('mux_asset_id', assetId)
+
+    if (error) {
+      // Same gap as the Stripe webhook: discarding this error meant a clip
+      // could finish processing successfully on Mux's end while staying
+      // stuck on "processing" in our own database forever, with Mux
+      // believing the webhook was delivered fine (200) and never retrying.
+      console.error('[mux webhook] failed to mark clip ready', { assetId, error: error.message })
+      return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
+    }
   }
 
   if (type === 'video.asset.errored') {
-    await supabase.from('clips').update({ status: 'failed' }).eq('mux_asset_id', data.id)
+    const { error } = await supabase.from('clips').update({ status: 'failed' }).eq('mux_asset_id', data.id)
+    if (error) {
+      console.error('[mux webhook] failed to mark clip failed', { assetId: data.id, error: error.message })
+      return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
+    }
   }
 
   return NextResponse.json({ received: true })

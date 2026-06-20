@@ -17,7 +17,19 @@ export async function GET(request: Request) {
 
       if (!existing) {
         // New user — create row + send welcome email + redirect to settings
-        await supabase.from('users').insert({ id: user.id, email: user.email! })
+        const { error: insertErr } = await supabase.from('users').insert({ id: user.id, email: user.email! })
+        if (insertErr) {
+          // This is the signup path - there is no UI anywhere downstream
+          // that could surface this failure to the user (they're about to
+          // land on Settings as if onboarding succeeded). A failed insert
+          // here previously meant a real auth user with no corresponding
+          // users row, which can cascade into foreign-key failures the
+          // first time anything tries to reference user_id - and nothing
+          // would ever log why. At minimum, log it so it's discoverable.
+          console.error('[auth/callback] failed to create users row for new signup', {
+            userId: user.id, email: user.email, error: insertErr.message,
+          })
+        }
         try { await sendWelcomeEmail(user.email!, user.user_metadata?.full_name) } catch {}
         return NextResponse.redirect(`${origin}/dashboard/settings?welcome=1`)
       }
