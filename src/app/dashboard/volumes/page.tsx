@@ -27,6 +27,7 @@ export default function VolumesPage() {
   const [newKw, setNewKw] = useState('')
   const [adding, setAdding] = useState(false)
   const [filter, setFilter] = useState('')
+  const [volumeError, setVolumeError] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -61,24 +62,39 @@ export default function VolumesPage() {
   const addKeyword = async () => {
     if (!newKw.trim() || !brand) return
     setAdding(true)
+    setVolumeError('')
     const { volume, trend, opportunity } = estimateVolume(newKw.trim())
     const kw = { query: newKw.trim(), estimated_volume: volume, opportunity_score: opportunity, trend, engines: ['chatgpt', 'perplexity', 'gemini'] }
-    const { data } = await supabase.from('prompt_volumes').insert({ brand_id: brand.id, query: kw.query, estimated_volume: kw.estimated_volume, opportunity_score: kw.opportunity_score, engines: kw.engines }).select().single()
-    if (data) {
-      setKeywords(k => [{ ...kw, ...data }, ...k])
-      // Also save to brand.keywords so it shows in settings & scans
-      const currentKws = brand.keywords || []
-      if (!currentKws.includes(kw.query)) {
-        await supabase.from('brands').update({ keywords: [...currentKws, kw.query] }).eq('id', brand.id)
+    const { data, error } = await supabase.from('prompt_volumes').insert({ brand_id: brand.id, query: kw.query, estimated_volume: kw.estimated_volume, opportunity_score: kw.opportunity_score, engines: kw.engines }).select().single()
+    if (error || !data) {
+      setVolumeError('Failed to add keyword — please try again')
+      setAdding(false)
+      return
+    }
+    setKeywords(k => [{ ...kw, ...data }, ...k])
+    // Also save to brand.keywords so it shows in settings & scans
+    const currentKws = brand.keywords || []
+    if (!currentKws.includes(kw.query)) {
+      const { error: brandErr } = await supabase.from('brands').update({ keywords: [...currentKws, kw.query] }).eq('id', brand.id)
+      if (!brandErr) {
         setBrand((b: any) => ({ ...b, keywords: [...currentKws, kw.query] }))
       }
+      // If this secondary sync fails, the keyword is still tracked for
+      // volume purposes (the insert above succeeded) - it just won't show
+      // up in Settings/scans until retried. Not worth blocking on or
+      // erroring loudly for, since the primary action did succeed.
     }
     setNewKw('')
     setAdding(false)
   }
 
   const deleteKeyword = async (id: string) => {
-    await supabase.from('prompt_volumes').delete().eq('id', id)
+    setVolumeError('')
+    const { error } = await supabase.from('prompt_volumes').delete().eq('id', id)
+    if (error) {
+      setVolumeError('Failed to delete keyword — please try again')
+      return
+    }
     setKeywords(k => k.filter(x => x.id !== id))
   }
 
@@ -97,6 +113,12 @@ export default function VolumesPage() {
           <p className="mt-1 text-sm text-white/40">Estimated monthly AI query volumes for your keywords</p>
         </div>
       </div>
+
+      {volumeError && (
+        <div className="rounded-xl border border-red-400/20 bg-red-400/[0.08] px-4 py-2.5 text-sm text-red-300">
+          {volumeError}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
