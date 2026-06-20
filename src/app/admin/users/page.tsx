@@ -15,6 +15,7 @@ export default function AdminUsersPage() {
   const [editingPlan, setEditingPlan] = useState<string | null>(null)
   const [savingPlan, setSavingPlan] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [actionError, setActionError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -31,16 +32,39 @@ export default function AdminUsersPage() {
 
   const updatePlan = async (userId: string, plan: string) => {
     setSavingPlan(userId)
-    await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, plan }) })
-    setUsers(u => u.map(x => x.id === userId ? { ...x, plan } : x))
-    setEditingPlan(null); setSavingPlan(null)
+    setActionError('')
+    try {
+      const res = await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, plan }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || data.error) {
+        setActionError(data.error || `Failed to update plan (${res.status})`)
+        return
+      }
+      setUsers(u => u.map(x => x.id === userId ? { ...x, plan } : x))
+    } catch {
+      setActionError('Failed to update plan — check your connection and try again')
+    } finally {
+      setEditingPlan(null); setSavingPlan(null)
+    }
   }
 
   const deleteUser = async (userId: string, email: string) => {
     if (!confirm(`Delete user ${email}? This removes ALL their data permanently.`)) return
     setDeletingId(userId)
-    await fetch('/api/admin/users', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId }) })
-    setUsers(u => u.filter(x => x.id !== userId)); setTotal(t => t - 1); setDeletingId(null)
+    setActionError('')
+    try {
+      const res = await fetch('/api/admin/users', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || data.error) {
+        setActionError(data.error || `Failed to delete user (${res.status}) — they have NOT been removed`)
+        return
+      }
+      setUsers(u => u.filter(x => x.id !== userId)); setTotal(t => t - 1)
+    } catch {
+      setActionError('Failed to delete user — check your connection. They have NOT been removed.')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const totalPages = Math.ceil(total / 25)
@@ -50,6 +74,13 @@ export default function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-black text-white">Users</h1><p className="text-sm text-white/40 mt-1">{total.toLocaleString()} total</p></div>
       </div>
+
+      {actionError && (
+        <div className="rounded-xl border border-red-400/20 bg-red-400/[0.08] px-4 py-2.5 text-sm text-red-300">
+          ⚠ {actionError}
+        </div>
+      )}
+
       <div className="flex gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" />

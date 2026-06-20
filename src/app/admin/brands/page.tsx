@@ -9,6 +9,7 @@ export default function AdminBrandsPage() {
   const [q, setQ] = useState('')
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [actionError, setActionError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -24,8 +25,20 @@ export default function AdminBrandsPage() {
   const deleteBrand = async (brandId: string, name: string) => {
     if (!confirm(`Delete brand "${name}" and all its data?`)) return
     setDeletingId(brandId)
-    await fetch('/api/admin/brands', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brandId }) })
-    setBrands(b => b.filter(x => x.id !== brandId)); setTotal(t => t - 1); setDeletingId(null)
+    setActionError('')
+    try {
+      const res = await fetch('/api/admin/brands', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brandId }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || data.error) {
+        setActionError(data.error || `Failed to delete brand (${res.status}) — it has NOT been removed`)
+        return
+      }
+      setBrands(b => b.filter(x => x.id !== brandId)); setTotal(t => t - 1)
+    } catch {
+      setActionError('Failed to delete brand — check your connection. It has NOT been removed.')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const planBadge = (p: string) => ({ pro: 'text-violet-400 bg-violet-400/10 border-violet-400/20', team: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' }[p] || 'text-white/20 bg-white/[0.04] border-white/[0.06]')
@@ -34,6 +47,13 @@ export default function AdminBrandsPage() {
   return (
     <div className="max-w-6xl space-y-6">
       <div><h1 className="text-2xl font-black text-white">Brands</h1><p className="text-sm text-white/40 mt-1">{total.toLocaleString()} total brands</p></div>
+
+      {actionError && (
+        <div className="rounded-xl border border-red-400/20 bg-red-400/[0.08] px-4 py-2.5 text-sm text-red-300">
+          ⚠ {actionError}
+        </div>
+      )}
+
       <div className="relative max-w-sm">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" />
         <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search by name or domain..."
