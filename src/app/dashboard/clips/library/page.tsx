@@ -105,6 +105,12 @@ export default function LibraryPage() {
             <Scissors size={14} /> Create clip
           </a>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-white/[0.08] p-16 text-center">
+          <Search size={24} className="mx-auto mb-3 text-white/10" />
+          <p className="text-sm text-white/40 mb-1">No clips match "{search}"</p>
+          <button onClick={() => setSearch('')} className="text-sm text-emerald-400 hover:text-emerald-300">Clear search</button>
+        </div>
       ) : view === 'grid' ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map(clip => (

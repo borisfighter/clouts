@@ -186,25 +186,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-5">
-          {navSections.map((section) => (
-            <div key={section.label}>
-              <p className={cn('mb-1.5 px-2 text-[10px] font-bold uppercase tracking-widest', section.color)}>
-                {section.label}
-              </p>
-              {section.items.map(({ href, icon: Icon, label }) => {
-                const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
-                return (
-                  <Link key={href} href={href} onClick={() => setSidebarOpen(false)}
-                    className={cn(
-                      'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors mb-0.5',
-                      active ? 'bg-violet-500/15 text-violet-300' : 'text-white/40 hover:bg-white/[0.04] hover:text-white/70'
-                    )}>
-                    <Icon size={14} />{label}
-                  </Link>
-                )
-              })}
-            </div>
-          ))}
+          {(() => {
+            // Pick the single most specific (longest) href that matches the
+            // current path, so a sub-route like /dashboard/clips/library
+            // highlights only "My Library" — not also "Auto Clips", which
+            // happened previously because pathname.startsWith('/dashboard/clips')
+            // is true for every clips sub-route, and each nav item was
+            // computing its own "active" independently with no awareness
+            // of more specific sibling matches.
+            const allHrefs = navSections.flatMap(s => s.items.map(i => i.href))
+            const matches = allHrefs.filter(href => pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/')))
+            const activeHref = matches.sort((a, b) => b.length - a.length)[0]
+            return navSections.map((section) => (
+              <div key={section.label}>
+                <p className={cn('mb-1.5 px-2 text-[10px] font-bold uppercase tracking-widest', section.color)}>
+                  {section.label}
+                </p>
+                {section.items.map(({ href, icon: Icon, label }) => {
+                  const active = href === activeHref
+                  return (
+                    <Link key={href} href={href} onClick={() => setSidebarOpen(false)}
+                      className={cn(
+                        'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors mb-0.5',
+                        active ? 'bg-violet-500/15 text-violet-300' : 'text-white/40 hover:bg-white/[0.04] hover:text-white/70'
+                      )}>
+                      <Icon size={14} />{label}
+                    </Link>
+                  )
+                })}
+              </div>
+            ))
+          })()}
         </nav>
 
         {/* Bottom */}
