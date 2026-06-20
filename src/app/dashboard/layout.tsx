@@ -94,17 +94,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
       const newActive = brands.find(b => b.id === brandId)
       setActiveBrand(newActive)
-      // router.refresh() only re-runs Server Component data fetching — every
-      // dashboard page here is a Client Component that loads its own data
-      // once via Supabase in a useEffect keyed on mount, not on router state.
-      // Without an actual navigation, switching brands updated the sidebar
-      // selector but every page kept showing the PREVIOUS brand's data until
-      // a manual reload (confirmed bug, 2026-06-19). Navigating to /dashboard
-      // forces a real route change so this layout's own pathname-keyed
-      // useEffect re-fetches brands/plan, and Overview mounts fresh and
-      // fetches the newly-active brand's data instead of stale state.
-      router.push('/dashboard')
-      router.refresh()
+      // Every dashboard page is a Client Component that fetches its own
+      // brand-scoped data once via Supabase in a useEffect keyed on mount,
+      // not on router/pathname state. router.refresh() only re-runs Server
+      // Component data fetching, and router.push() to the SAME route (e.g.
+      // switching brands while already on /dashboard, the most common case)
+      // is a no-op in the App Router — it does not remount the page or
+      // re-run its effects. Confirmed live: switching brands updated the
+      // sidebar selector instantly but Overview kept showing the previous
+      // brand's data indefinitely (bug present 2026-06-19, "fixed" with
+      // router.push in 609d27f but that fix only worked when switching FROM
+      // a different page, not from Overview itself). A full reload is the
+      // simplest fix that's guaranteed correct everywhere without requiring
+      // every page to subscribe to a shared brand context.
+      window.location.href = '/dashboard'
     } catch {
       setBrandSwitchError('Failed to switch brands — check your connection and try again')
     }
