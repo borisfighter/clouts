@@ -13,6 +13,8 @@ export default function CompetitorsPage() {
   const [compInput, setCompInput] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [scanError, setScanError] = useState('')
   const [mentions, setMentions] = useState<any[]>([])
 
   async function loadMentions(brandId: string) {
@@ -44,24 +46,45 @@ export default function CompetitorsPage() {
   const saveCompetitors = async () => {
     if (!brand) return
     setSaving(true)
-    await fetch('/api/brands', {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brandId: brand.id, competitors: brand.competitors }),
-    })
-    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000)
+    setSaveError('')
+    try {
+      const res = await fetch('/api/brands', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandId: brand.id, competitors: brand.competitors }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || data.error) {
+        setSaveError(data.error || 'Failed to save competitors — please try again')
+        return
+      }
+      setSaved(true); setTimeout(() => setSaved(false), 2000)
+    } catch {
+      setSaveError('Failed to save competitors — check your connection and try again')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const runScan = async () => {
     if (!brand || !brand.keywords?.length) return
-    setScanning(true); setScanResult(null)
-    const res = await fetch('/api/scrape', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brandId: brand.id, engines: ['perplexity'] }),
-    })
-    const data = await res.json()
-    setScanResult(data)
-    await loadMentions(brand.id)
-    setScanning(false)
+    setScanning(true); setScanResult(null); setScanError('')
+    try {
+      const res = await fetch('/api/scrape', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandId: brand.id, engines: ['perplexity'] }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        setScanError(data.error || 'Scan failed — please try again')
+        return
+      }
+      setScanResult(data)
+      await loadMentions(brand.id)
+    } catch {
+      setScanError('Scan failed — check your connection and try again')
+    } finally {
+      setScanning(false)
+    }
   }
 
   const competitors: string[] = brand?.competitors || []
@@ -97,6 +120,17 @@ export default function CompetitorsPage() {
         </div>
       )}
 
+      {scanError && (
+        <div className="rounded-xl border border-red-400/20 bg-red-400/[0.08] px-4 py-2.5 text-sm text-red-300 flex items-center justify-between gap-3">
+          <span>{scanError}</span>
+          {scanError.toLowerCase().includes('upgrade') && (
+            <a href="/pricing" className="shrink-0 rounded-lg bg-red-400/15 px-3 py-1 text-xs font-bold text-red-200 hover:bg-red-400/25 transition-colors">
+              Upgrade →
+            </a>
+          )}
+        </div>
+      )}
+
       {/* Add competitors */}
       <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5 space-y-4">
         <h2 className="text-sm font-bold text-white">Competitors to track</h2>
@@ -125,6 +159,7 @@ export default function CompetitorsPage() {
               {saving ? <Loader2 size={11} className="animate-spin" /> : saved ? <Check size={11} /> : null}
               {saved ? 'Saved!' : 'Save competitors'}
             </button>
+            {saveError && <p className="text-xs text-red-400">{saveError}</p>}
           </>
         ) : (
           <p className="text-xs text-white/20">Enter competitor domains to track how they appear vs you in AI search</p>

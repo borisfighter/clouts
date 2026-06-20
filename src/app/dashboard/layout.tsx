@@ -43,6 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [showBrandMenu, setShowBrandMenu] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [plan, setPlan] = useState<string>('free')
+  const [brandSwitchError, setBrandSwitchError] = useState('')
   const brandMenuRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const router = useRouter()
@@ -79,15 +80,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const switchBrand = async (brandId: string) => {
     setShowBrandMenu(false)
-    // Update default brand
-    await fetch('/api/brands', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brandId, is_default: true }),
-    })
-    const newActive = brands.find(b => b.id === brandId)
-    setActiveBrand(newActive)
-    router.refresh()
+    setBrandSwitchError('')
+    try {
+      const res = await fetch('/api/brands', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandId, is_default: true }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || data.error) {
+        setBrandSwitchError(data.error || 'Failed to switch brands — please try again')
+        return
+      }
+      const newActive = brands.find(b => b.id === brandId)
+      setActiveBrand(newActive)
+      // router.refresh() only re-runs Server Component data fetching — every
+      // dashboard page here is a Client Component that loads its own data
+      // once via Supabase in a useEffect keyed on mount, not on router state.
+      // Without an actual navigation, switching brands updated the sidebar
+      // selector but every page kept showing the PREVIOUS brand's data until
+      // a manual reload (confirmed bug, 2026-06-19). Navigating to /dashboard
+      // forces a real route change so this layout's own pathname-keyed
+      // useEffect re-fetches brands/plan, and Overview mounts fresh and
+      // fetches the newly-active brand's data instead of stale state.
+      router.push('/dashboard')
+      router.refresh()
+    } catch {
+      setBrandSwitchError('Failed to switch brands — check your connection and try again')
+    }
   }
 
   const handleSignOut = async () => {
@@ -154,6 +174,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           )}
         </div>
+
+        {brandSwitchError && (
+          <div className="mx-3 mt-2 rounded-lg border border-red-400/20 bg-red-400/[0.08] px-3 py-2 text-[11px] text-red-300">
+            {brandSwitchError}
+          </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-5">
