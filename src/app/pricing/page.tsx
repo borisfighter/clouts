@@ -8,7 +8,7 @@ const TIERS = [
   {
     key: 'starter',
     name: 'Starter',
-    price: '$499',
+    price: '$99',
     period: '/mo',
     tagline: 'Track one AI engine and start building visibility',
     highlight: false,
