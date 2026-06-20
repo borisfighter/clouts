@@ -12,6 +12,13 @@ export async function POST(req: NextRequest) {
   const { data: brand } = await supabase.from('brands').select('*').eq('id', brandId).eq('user_id', user.id).single()
   if (!brand) return NextResponse.json({ error: 'Brand not found' }, { status: 404 })
 
+  // NOTE: PLANS.free.limits.agents is 0 in src/lib/stripe/index.ts, but the
+  // AEO Agent is intentionally left ungated here — it's a free-tier hook
+  // feature (works via mock fallback with no Anthropic key) and the
+  // FAQ/onboarding checklist on /dashboard/settings explicitly walks free
+  // users through running it. If agent limits should be enforced, update
+  // PLANS.free.limits.agents intent and re-add gating using getUserPlan().
+
   const { data: mentions } = await supabase.from('mentions').select('engine, prompt, mentioned, sentiment, score, response_text')
     .eq('brand_id', brandId).order('scraped_at', { ascending: false }).limit(50)
 

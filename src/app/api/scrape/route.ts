@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { scrapeAllEngines, Engine } from '@/lib/scraper'
+import { getUserPlan, clampEngines, isUnlimited } from '@/lib/plan-limits'
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -19,7 +20,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No keywords configured. Add keywords in Settings first.' }, { status: 400 })
   }
 
-  const selectedEngines = (engines as Engine[]) || ['perplexity']
+  const { planKey, plan } = await getUserPlan(user.id)
+
+  // Server-side monthly mention quota — never trust client-reported usage.
+  if (!isUnlimited(plan.limits.mentionsPerMonth)) {
+    const since = new Date()
+    since.setDate(1); since.setHours(0, 0, 0, 0)
+    const { count } = await supabase
+      .from('mentions').select('*', { count: 'exact', head: true })
+      .eq('brand_id', brandId).gte('scraped_at', since.toISOString())
+    if ((count || 0) >= plan.limits.mentionsPerMonth) {
+      return NextResponse.json({
+        error: `Monthly mention limit reached (${plan.limits.mentionsPerMonth}/mo on the ${plan.name} plan). Upgrade for more.`,
+      }, { status: 403 })
+    }
+  }
+
+  // Server-side engine gating — clamp whatever the client asked for down to
+  // what this plan is actually entitled to, regardless of request payload.
+  const selectedEngines = clampEngines(engines as Engine[] | undefined, planKey) as Engine[]
   const rawResults = await scrapeAllEngines(keywords, brand.name, brand.domain, selectedEngines)
   
   // Add competitor mention detection
