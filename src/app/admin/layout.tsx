@@ -21,20 +21,42 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname()
   const [checking, setChecking] = useState(true)
   const [authorized, setAuthorized] = useState(false)
+  const [checkError, setCheckError] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  useEffect(() => {
-    async function check() {
+  const check = async () => {
+    setChecking(true)
+    setCheckError(false)
+    try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth/login'); return }
       const res = await fetch('/api/admin/stats')
       if (res.status === 403 || res.status === 401) { router.push('/dashboard'); return }
       setAuthorized(true)
+    } catch {
+      // A network failure here previously left the page stuck forever on
+      // "Verifying admin access..." with no way out except a manual reload -
+      // the fetch rejecting is never the same as it resolving with 401/403,
+      // so that check was silently skipped entirely.
+      setCheckError(true)
+    } finally {
       setChecking(false)
     }
-    check()
-  }, [])
+  }
+
+  useEffect(() => { check() }, [])
+
+  if (checkError) return (
+    <div className="flex h-screen items-center justify-center bg-[#08090A]">
+      <div className="text-center max-w-xs px-6">
+        <p className="text-sm text-white/40 mb-4">Couldn't verify admin access — check your connection.</p>
+        <button onClick={check} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-bold text-white hover:bg-violet-500 transition-colors">
+          Try again
+        </button>
+      </div>
+    </div>
+  )
 
   if (checking) return (
     <div className="flex h-screen items-center justify-center bg-[#08090A]">

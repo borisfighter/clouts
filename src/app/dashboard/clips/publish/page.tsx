@@ -21,6 +21,7 @@ export default function PublishQueuePage() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
   const [publishing, setPublishing] = useState(false)
   const [published, setPublished] = useState<string[]>([])
+  const [queueError, setQueueError] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -45,15 +46,29 @@ export default function PublishQueuePage() {
   const handleQueue = async () => {
     if (!selectedClip || !selectedPlatforms.length) return
     setPublishing(true)
+    setQueueError('')
+    const succeeded: string[] = []
+    const failed: string[] = []
     for (const platform of selectedPlatforms) {
-      await supabase.from('clip_publishes').insert({ clip_id: selectedClip, platform, status: 'queued' })
+      const { error } = await supabase.from('clip_publishes').insert({ clip_id: selectedClip, platform, status: 'queued' })
+      if (error) failed.push(platform)
+      else succeeded.push(platform)
     }
-    setPublished(selectedPlatforms)
     setPublishing(false)
+    if (succeeded.length > 0) setPublished(succeeded)
+    if (failed.length > 0) {
+      setQueueError(
+        succeeded.length > 0
+          ? `Queued to ${succeeded.length} platform${succeeded.length > 1 ? 's' : ''}, but failed for: ${failed.join(', ')}`
+          : `Failed to queue — please try again`
+      )
+    }
     // Refresh queued
     const { data: q } = await supabase.from('clip_publishes').select('*').eq('clip_id', selectedClip)
     setQueued(prev => [...(q || []), ...prev])
-    setTimeout(() => { setSelectedClip(null); setSelectedPlatforms([]); setPublished([]) }, 3000)
+    if (succeeded.length > 0) {
+      setTimeout(() => { setSelectedClip(null); setSelectedPlatforms([]); setPublished([]) }, 3000)
+    }
   }
 
   if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/20" /></div>
@@ -120,6 +135,12 @@ export default function PublishQueuePage() {
               {publishing ? <Loader2 size={14} className="animate-spin" /> : published.length > 0 ? <Check size={14} /> : <Send size={14} />}
               {publishing ? 'Queuing...' : published.length > 0 ? `Queued to ${published.length} platform${published.length > 1 ? 's' : ''}!` : `Queue to ${selectedPlatforms.length || 0} platform${selectedPlatforms.length !== 1 ? 's' : ''}`}
             </button>
+
+            {queueError && (
+              <div className="rounded-xl border border-red-400/20 bg-red-400/[0.08] px-3 py-2 text-xs text-red-300">
+                {queueError}
+              </div>
+            )}
 
             <p className="text-xs text-center text-white/20">
               Native platform integrations coming in Q3 2026.{' '}
