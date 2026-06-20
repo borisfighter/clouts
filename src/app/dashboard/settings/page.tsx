@@ -23,6 +23,7 @@ function SettingsInner() {
   const [brandId, setBrandId] = useState<string | null>(null)
   const [userPlan, setUserPlan] = useState<string>('free')
   const [portalLoading, setPortalLoading] = useState(false)
+  const [billingError, setBillingError] = useState('')
   const [suggesting, setSuggesting] = useState(false)
   const [shareSlug, setShareSlug] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -129,10 +130,17 @@ function SettingsInner() {
 
   const handleBillingPortal = async () => {
     setPortalLoading(true)
-    const res = await fetch('/api/billing/portal', { method: 'POST' })
-    const { url, error } = await res.json()
-    if (error) { alert(error); setPortalLoading(false); return }
-    window.location.href = url
+    setBillingError('')
+    try {
+      const res = await fetch('/api/billing/portal', { method: 'POST' })
+      const { url, error } = await res.json()
+      if (error) { setBillingError(error); return }
+      window.location.href = url
+    } catch {
+      setBillingError('Failed to open billing portal — check your connection and try again')
+    } finally {
+      setPortalLoading(false)
+    }
   }
 
   const planBadge = PLAN_BADGES[userPlan] || PLAN_BADGES.free
@@ -283,6 +291,11 @@ function SettingsInner() {
             </button>
           )}
         </div>
+        {billingError && (
+          <div className="rounded-xl border border-red-400/20 bg-red-400/[0.08] px-4 py-2.5 text-sm text-red-300">
+            {billingError}
+          </div>
+        )}
         {userPlan === 'free' && (
           <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.06] p-4">
             <p className="text-xs font-semibold text-violet-300 mb-1">Unlock all 5 AI engines</p>

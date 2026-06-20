@@ -14,10 +14,12 @@ const plans = [
 export default function PricingPage() {
   const [interval, setInterval] = useState<'monthly' | 'yearly'>('monthly')
   const [loading, setLoading] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState('')
 
   const handleCheckout = async (planKey: string) => {
     if (planKey === 'free') return window.location.href = '/auth/signup'
     setLoading(planKey)
+    setCheckoutError('')
     try {
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',
@@ -26,15 +28,16 @@ export default function PricingPage() {
       })
       const { url, error } = await res.json()
       if (error) {
-        if (error.includes('not configured')) {
-          // Stripe not set up yet - show helpful message
-          alert('Payment processing is not configured yet. Contact hello@clouts.com to upgrade, or check back soon!')
-        } else {
-          alert(error)
-        }
+        setCheckoutError(
+          error.includes('not configured')
+            ? 'Payment processing is not configured yet. Email hello@clouts.com to upgrade, or check back soon!'
+            : error
+        )
         return
       }
       window.location.href = url
+    } catch {
+      setCheckoutError('Something went wrong starting checkout — please try again')
     } finally {
       setLoading(null)
     }
@@ -82,6 +85,12 @@ export default function PricingPage() {
             </button>
           </div>
         </div>
+
+        {checkoutError && (
+          <div className="mx-auto mb-6 max-w-xl rounded-xl border border-yellow-400/20 bg-yellow-400/[0.08] px-4 py-3 text-sm text-yellow-200 text-center">
+            {checkoutError}
+          </div>
+        )}
 
         {/* Plans */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

@@ -27,6 +27,7 @@ export default function ClipsPage() {
   const [title, setTitle] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
   const [deleting, setDeleting] = useState<string | null>(null)
 
   async function loadClips(brandId: string) {
@@ -50,6 +51,7 @@ export default function ClipsPage() {
     e.preventDefault()
     if (!brand || !title.trim()) return
     setCreating(true)
+    setErrorMsg('')
     try {
       const res = await fetch('/api/clips/upload', {
         method: 'POST',
@@ -57,11 +59,13 @@ export default function ClipsPage() {
         body: JSON.stringify({ brandId: brand.id, title: title.trim(), sourceUrl: sourceUrl.trim() || undefined }),
       })
       const data = await res.json()
-      if (data.error) { alert(data.error); return }
+      if (data.error) { setErrorMsg(data.error); return }
       setSuccessMsg(sourceUrl ? 'Clip created — video processing via Mux' : 'Clip created (Mux not configured — add MUX keys to enable video)')
       setTitle(''); setSourceUrl(''); setShowForm(false)
       await loadClips(brand.id)
       setTimeout(() => setSuccessMsg(''), 5000)
+    } catch {
+      setErrorMsg('Failed to create clip — check your connection and try again')
     } finally {
       setCreating(false)
     }
@@ -87,7 +91,7 @@ export default function ClipsPage() {
           <p className="mt-1 text-sm text-white/40">AI-detected moments clipped and ready to publish</p>
         </div>
         {brand && (
-          <button onClick={() => setShowForm(s => !s)}
+          <button onClick={() => { setShowForm(s => !s); setErrorMsg('') }}
             className="flex items-center gap-2 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-bold text-[#08090A] hover:opacity-85 transition-opacity">
             <Upload size={14} />{showForm ? 'Cancel' : 'Upload video'}
           </button>
@@ -97,6 +101,17 @@ export default function ClipsPage() {
       {successMsg && (
         <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/[0.08] px-4 py-2.5 text-sm text-emerald-300">
           {successMsg}
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="rounded-xl border border-red-400/20 bg-red-400/[0.08] px-4 py-2.5 text-sm text-red-300 flex items-center justify-between gap-3">
+          <span>{errorMsg}</span>
+          {errorMsg.toLowerCase().includes('upgrade') && (
+            <a href="/pricing" className="shrink-0 rounded-lg bg-red-400/15 px-3 py-1 text-xs font-bold text-red-200 hover:bg-red-400/25 transition-colors">
+              Upgrade →
+            </a>
+          )}
         </div>
       )}
 
