@@ -24,6 +24,7 @@ export default function LibraryPage() {
   const [search, setSearch] = useState('')
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [libraryError, setLibraryError] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -42,7 +43,13 @@ export default function LibraryPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this clip?')) return
     setDeleting(id)
-    await supabase.from('clips').delete().eq('id', id)
+    setLibraryError('')
+    const { error } = await supabase.from('clips').delete().eq('id', id)
+    if (error) {
+      setLibraryError('Failed to delete clip — please try again')
+      setDeleting(null)
+      return
+    }
     setClips(c => c.filter(x => x.id !== id))
     setDeleting(null)
   }
@@ -63,6 +70,12 @@ export default function LibraryPage() {
           <Scissors size={14} /> New clip
         </a>
       </div>
+
+      {libraryError && (
+        <div className="rounded-xl border border-red-400/20 bg-red-400/[0.08] px-4 py-2.5 text-sm text-red-300">
+          {libraryError}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">

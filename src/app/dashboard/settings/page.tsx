@@ -28,6 +28,7 @@ function SettingsInner() {
   const [shareSlug, setShareSlug] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [deletingBrand, setDeletingBrand] = useState(false)
+  const [brandActionError, setBrandActionError] = useState('')
 
   const [name, setName] = useState('')
   const [domain, setDomain] = useState('')
@@ -61,13 +62,24 @@ function SettingsInner() {
     if (!brandId) return
     if (!window.confirm(`Delete "${name}"? All scan data, clips, and agents will be permanently removed. This cannot be undone.`)) return
     setDeletingBrand(true)
+    setBrandActionError('')
     try {
       const { createClient } = await import('@/lib/supabase/client')
       const supabase = createClient()
-      await supabase.from('mentions').delete().eq('brand_id', brandId)
-      await supabase.from('brands').delete().eq('id', brandId)
+      const { error: mentionsErr } = await supabase.from('mentions').delete().eq('brand_id', brandId)
+      if (mentionsErr) throw mentionsErr
+      const { error: brandErr } = await supabase.from('brands').delete().eq('id', brandId)
+      if (brandErr) throw brandErr
+      // Only redirect — implying success — once both deletes are confirmed.
+      // Previously this fired unconditionally right after two discarded
+      // .delete() calls: Supabase resolves with { error } rather than
+      // throwing on an RLS/permissions failure, so the try/catch here never
+      // caught it, and a user could click through this irreversible-sounding
+      // confirm dialog, land back on /dashboard, and have no idea the brand
+      // (and its data) might still fully exist.
       window.location.href = '/dashboard'
     } catch {
+      setBrandActionError('Failed to delete brand — please try again. Nothing has been removed.')
       setDeletingBrand(false)
     }
   }
@@ -75,11 +87,18 @@ function SettingsInner() {
   const clearScanData = async () => {
     if (!brandId) return
     if (!window.confirm(`Clear all scan data for "${name}"? This removes all AI mentions, scan history, and analytics. Brand settings are kept.`)) return
-    const { createClient } = await import('@/lib/supabase/client')
-    const supabase = createClient()
-    await supabase.from('mentions').delete().eq('brand_id', brandId)
-    await supabase.from('prompt_volumes').delete().eq('brand_id', brandId)
-    window.location.reload()
+    setBrandActionError('')
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { error: mentionsErr } = await supabase.from('mentions').delete().eq('brand_id', brandId)
+      if (mentionsErr) throw mentionsErr
+      const { error: volumesErr } = await supabase.from('prompt_volumes').delete().eq('brand_id', brandId)
+      if (volumesErr) throw volumesErr
+      window.location.reload()
+    } catch {
+      setBrandActionError('Failed to clear scan data — please try again.')
+    }
   }
 
   const suggestKeywords = async () => {
@@ -102,12 +121,13 @@ function SettingsInner() {
   }
 
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true); setSaved(false)
+    e.preventDefault(); setSaving(true); setSaved(false); setBrandActionError('')
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return setSaving(false)
 
     await supabase.from('users').upsert({ id: user.id, email: user.email! }, { onConflict: 'id' })
 
+    let saveFailed = false
     if (brandId) {
       const updates: any = { name, domain, keywords, competitors }
       // Generate share slug if missing
@@ -115,16 +135,35 @@ function SettingsInner() {
         const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
         const newSlug = slugBase + '-' + Math.random().toString(36).slice(2, 10)
         updates.share_slug = newSlug
-        setShareSlug(newSlug)
       }
-      await supabase.from('brands').update(updates).eq('id', brandId)
+      const { error } = await supabase.from('brands').update(updates).eq('id', brandId)
+      if (error) {
+        saveFailed = true
+      } else if (updates.share_slug) {
+        setShareSlug(updates.share_slug)
+      }
     } else {
-      const { data } = await supabase.from('brands').insert({
+      const { data, error } = await supabase.from('brands').insert({
         user_id: user.id, name, domain, keywords, competitors, is_default: true,
       }).select().single()
-      if (data) setBrandId(data.id)
+      if (error || !data) {
+        saveFailed = true
+      } else {
+        setBrandId(data.id)
+      }
     }
-    setSaving(false); setSaved(true)
+
+    setSaving(false)
+    if (saveFailed) {
+      // The save button previously showed "Saved!" unconditionally on both
+      // the update and insert paths regardless of whether either Supabase
+      // call actually succeeded - this is the main brand setup form used by
+      // every user on every visit to Settings, so it's the highest-traffic
+      // instance of this session's recurring bug class.
+      setBrandActionError('Failed to save — please try again.')
+      return
+    }
+    setSaved(true)
     setTimeout(() => { setSaved(false); if (isWelcome) router.push('/dashboard/visibility') }, 2000)
   }
 
@@ -170,6 +209,11 @@ function SettingsInner() {
       {/* Brand setup */}
       <form onSubmit={handleSave} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-5">
         <h2 className="text-sm font-bold text-white">Brand setup</h2>
+        {brandActionError && (
+          <div className="rounded-xl border border-red-400/20 bg-red-400/[0.08] px-4 py-2.5 text-sm text-red-300">
+            {brandActionError}
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-white/50 mb-1.5">Brand name</label>
@@ -361,6 +405,11 @@ function SettingsInner() {
             <AlertTriangle size={14} className="text-red-400/70" />
             <h2 className="text-sm font-bold text-white">Danger zone</h2>
           </div>
+          {brandActionError && (
+            <div className="rounded-xl border border-red-400/30 bg-red-400/[0.1] px-4 py-2.5 text-sm text-red-300">
+              ⚠ {brandActionError}
+            </div>
+          )}
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm text-white/60">Clear scan data</p>
