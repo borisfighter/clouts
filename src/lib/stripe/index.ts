@@ -12,6 +12,15 @@ export const PLANS = {
     limits: { brands: 1, mentionsPerMonth: 100, clips: 0, agents: 0 },
     features: ['1 brand', '100 AI mentions/mo', 'Perplexity only', 'Email support'],
   },
+  starter: {
+    name: 'Starter',
+    price: 99,
+    priceMonthly: process.env.STRIPE_PRICE_STARTER_MONTHLY || '',
+    priceYearly: process.env.STRIPE_PRICE_STARTER_YEARLY || '',
+    trialDays: 3,
+    limits: { brands: 1, mentionsPerMonth: 1000, clips: 0, agents: 0 },
+    features: ['ChatGPT monitoring', 'Up to 50 tracked prompts', '1 seat', 'Basic visibility scoring', 'Email support'],
+  },
   pro: {
     name: 'Pro',
     price: 79,
@@ -27,6 +36,30 @@ export const PLANS = {
     priceYearly: process.env.STRIPE_PRICE_TEAM_YEARLY || '',
     limits: { brands: -1, mentionsPerMonth: -1, clips: -1, agents: -1 },
     features: ['Unlimited brands', 'Unlimited mentions', 'All engines + AI Overview', 'Unlimited clips', 'Unlimited agents', 'Dedicated support', 'Custom integrations'],
+  },
+  // growth/enterprise power the /pricing page's tier cards specifically.
+  // pro/team above remain the tiers actually enforced across the dashboard
+  // (src/lib/plan-limits.ts, admin panel, etc) - kept separate rather than
+  // renamed so existing plan-gating logic isn't touched by a pricing-page
+  // copy change.
+  growth: {
+    name: 'Growth',
+    price: 399,
+    priceMonthly: process.env.STRIPE_PRICE_GROWTH_MONTHLY || '',
+    priceYearly: process.env.STRIPE_PRICE_GROWTH_YEARLY || '',
+    trialDays: 3,
+    limits: { brands: 5, mentionsPerMonth: 10000, clips: 0, agents: 6 },
+    features: ['ChatGPT, Perplexity, Google AI Overviews', 'Up to 250 tracked prompts', '5 seats', 'Sentiment + competitor tracking', 'AEO agent — 6 content pieces/mo', 'Priority support'],
+  },
+  enterprise: {
+    name: 'Enterprise',
+    price: 399, // Trial bills at the Growth rate; sales adjusts to the
+                // negotiated custom rate before or shortly after trial ends.
+    priceMonthly: process.env.STRIPE_PRICE_ENTERPRISE_TRIAL_MONTHLY || process.env.STRIPE_PRICE_GROWTH_MONTHLY || '',
+    priceYearly: process.env.STRIPE_PRICE_ENTERPRISE_TRIAL_YEARLY || process.env.STRIPE_PRICE_GROWTH_YEARLY || '',
+    trialDays: 3,
+    limits: { brands: -1, mentionsPerMonth: -1, clips: -1, agents: -1 },
+    features: ['All AI engines (ChatGPT, Perplexity, Gemini, Claude, Grok + more)', 'Unlimited tracked prompts', 'Unlimited seats', 'Prompt Volumes — real query-volume data', 'Unlimited AEO agent runs', 'SSO / SAML + SOC 2', 'Dedicated account team'],
   },
 } as const
 

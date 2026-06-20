@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Check, Zap, ArrowRight, Mail } from 'lucide-react'
+import { Check, Zap, ArrowRight } from 'lucide-react'
 
 const TIERS = [
   {
@@ -59,7 +59,47 @@ const TIERS = [
 ]
 
 export default function PricingPage() {
-  const [requestSentFor, setRequestSentFor] = useState<string | null>(null)
+  const [loading, setLoading] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState('')
+
+  const handleStartTrial = async (tierKey: string) => {
+    setLoading(tierKey)
+    setCheckoutError('')
+    try {
+      const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: tierKey, interval: 'monthly' }),
+      })
+      const data = await res.json().catch(() => ({}))
+
+      if (res.status === 401) {
+        // Checkout requires an account so the trial subscription has
+        // somewhere to attach. /auth/signup requires email confirmation
+        // before a session exists, so there's no real same-tab redirect
+        // chain back to a specific trial action here - Settings -> Plan &
+        // Billing's own "Upgrade" link just points back to /pricing for
+        // free-plan users (see dashboard/settings/page.tsx), so the
+        // accurate instruction is simply: come back here once logged in.
+        setCheckoutError("You'll need an account first — sign up, then come back here to start your trial.")
+        setTimeout(() => { window.location.href = '/auth/signup' }, 1800)
+        return
+      }
+      if (data.error) {
+        setCheckoutError(
+          data.error.includes('not configured') || data.error.includes('Price not configured')
+            ? "Trial checkout isn't fully set up yet — email hello@clouts.com and we'll get you started manually."
+            : data.error
+        )
+        return
+      }
+      window.location.href = data.url
+    } catch {
+      setCheckoutError('Something went wrong starting your trial — please try again')
+    } finally {
+      setLoading(null)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#08090A] text-white">
@@ -68,7 +108,7 @@ export default function PricingPage() {
         <Link href="/" className="text-lg font-black">Clouts<span className="text-violet-400">.</span></Link>
         <div className="flex items-center gap-4">
           <Link href="/auth/login" className="text-sm text-white/50 hover:text-white">Log in</Link>
-          <a href="#demo" className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500 transition-colors">Get a demo</a>
+          <button onClick={() => handleStartTrial('growth')} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500 transition-colors">Start free trial</button>
         </div>
       </nav>
 
@@ -83,15 +123,20 @@ export default function PricingPage() {
             <span className="bg-gradient-to-r from-violet-400 to-emerald-400 bg-clip-text text-transparent">with your AI visibility</span>
           </h1>
           <p className="text-lg text-white/40 max-w-xl mx-auto">
-            Every plan starts with a conversation, not a credit card. We'll scope coverage, prompt volume, and seats to your team.
+            Try any plan free for 3 days. We verify your card with Stripe up front — no charge until the trial ends, cancel anytime before then.
           </p>
         </div>
+
+        {checkoutError && (
+          <div className="mx-auto mb-6 max-w-xl rounded-xl border border-yellow-400/20 bg-yellow-400/[0.08] px-4 py-3 text-sm text-yellow-200 text-center">
+            {checkoutError}
+          </div>
+        )}
 
         {/* Tiers */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {TIERS.map((tier) => (
             <div key={tier.key}
-              id={tier.highlight ? 'demo' : undefined}
               className={`relative flex flex-col rounded-2xl border p-7 transition-all ${
                 tier.highlight
                   ? 'border-violet-500/40 bg-violet-500/[0.06] shadow-lg shadow-violet-500/10'
@@ -122,29 +167,23 @@ export default function PricingPage() {
               </ul>
 
               <button
-                onClick={() => setRequestSentFor(tier.key)}
-                disabled={requestSentFor === tier.key}
+                onClick={() => handleStartTrial(tier.key)}
+                disabled={loading === tier.key}
                 className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
                   tier.highlight
                     ? 'bg-violet-600 text-white hover:bg-violet-500'
                     : 'border border-white/[0.10] text-white hover:border-white/20'
-                } disabled:opacity-70`}>
-                {requestSentFor === tier.key ? "We'll be in touch" : 'Get a demo'}
-                {requestSentFor !== tier.key && <ArrowRight size={14} />}
+                } disabled:opacity-60`}>
+                {loading === tier.key ? 'Starting trial...' : 'Start free trial'}
+                {loading !== tier.key && <ArrowRight size={14} />}
               </button>
+              <p className="mt-2 text-center text-[11px] text-white/25">3 days free, then {tier.price}{tier.period}</p>
             </div>
           ))}
         </div>
 
-        {requestSentFor && (
-          <div className="mx-auto mt-6 max-w-xl rounded-xl border border-emerald-400/20 bg-emerald-400/[0.08] px-4 py-3 text-sm text-emerald-200 text-center flex items-center justify-center gap-2">
-            <Mail size={14} />
-            Thanks — email <a href="mailto:hello@clouts.com" className="font-semibold underline hover:text-emerald-100">hello@clouts.com</a> and we'll schedule a walkthrough.
-          </div>
-        )}
-
         <p className="text-center text-xs text-white/20 mt-8">
-          No self-serve checkout — every plan is scoped to your team's prompt volume, seats, and engine coverage on a call.
+          Card required to start — verified by Stripe, charged automatically when your 3-day trial ends unless you cancel first.
         </p>
       </div>
 
@@ -185,7 +224,7 @@ export default function PricingPage() {
                   ['Public share reports', '✓', '—', '—', '—'],
                   ['CSV export', '✓', '✓', '—', '—'],
                   ['Scan history', '✓', '✓', '✓', '✓'],
-                  ['Self-serve trial', '—', '—', '✓', '✓'],
+                  ['Self-serve trial', '✓ (3 days)', '—', '✓', '✓'],
                 ].map(([feature, clouts, profound, visiblie, sevisible]) => (
                   <tr key={feature as string} className="border-b border-white/[0.04] hover:bg-white/[0.01]">
                     <td className="px-4 py-3 text-sm text-white/60">{feature}</td>
@@ -196,7 +235,7 @@ export default function PricingPage() {
                       { val: sevisible, highlight: false },
                     ].map(({ val, highlight }, i) => (
                       <td key={i} className={`px-4 py-3 text-center text-sm ${highlight ? 'bg-violet-500/[0.04] font-semibold' : ''}`}>
-                        <span className={val === '✓' ? 'text-emerald-400' : val === '—' ? 'text-white/15' : highlight ? 'text-violet-300' : 'text-white/50'}>
+                        <span className={val.startsWith('✓') ? 'text-emerald-400' : val === '—' ? 'text-white/15' : highlight ? 'text-violet-300' : 'text-white/50'}>
                           {val}
                         </span>
                       </td>
@@ -217,7 +256,7 @@ export default function PricingPage() {
           <div className="space-y-4">
             {[
               { q: 'How does Clouts monitor AI engines?', a: 'We query ChatGPT, Perplexity, Claude, Gemini, and Grok with your tracked keywords and analyze every response to see if — and how — your brand is mentioned. You get mention rate, sentiment, position, and score for each engine.' },
-              { q: 'Is there a free trial or self-serve signup?', a: "No — like the rest of the enterprise AEO category, every Clouts plan starts with a short call so we can scope prompt volume, engine coverage, and seats to your team before you commit." },
+              { q: 'Is there a free trial?', a: "Yes — every plan starts with a 3-day free trial. We collect a card up front and verify it with Stripe, but you're not charged until the trial ends, and you can cancel anytime before then from Settings." },
               { q: 'What is hallucination detection?', a: 'Our AEO agent analyzes AI response text to flag when an engine makes potentially inaccurate claims about your brand — wrong pricing, fabricated features, or misleading comparisons. You are alerted so you can create corrective content.' },
               { q: 'Can I change plans later?', a: 'Yes. Your account team can move you between Starter, Growth, and Enterprise as your tracked prompt volume and engine coverage needs change.' },
               { q: 'What is the AEO Agent?', a: 'The AEO (Answer Engine Optimization) Agent is powered by Claude claude-sonnet-4-6. It analyzes your scan data and generates a prioritized content roadmap — FAQ pages, comparison articles, and guides — specifically designed to get your brand cited more often in AI responses.' },

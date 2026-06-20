@@ -34,7 +34,15 @@ export async function POST(req: NextRequest) {
     mode: 'subscription',
     payment_method_types: ['card'],
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?upgraded=true`,
+    // If this plan has a trial, Stripe verifies/authorizes the card now
+    // (a $0 or small auth hold, card-network dependent) and starts billing
+    // automatically when the trial ends - no separate "free trial, then
+    // pay" step for the user, and no unverified trials.
+    subscription_data: (planConfig as any).trialDays
+      ? { trial_period_days: (planConfig as any).trialDays, trial_settings: { end_behavior: { missing_payment_method: 'cancel' } } }
+      : undefined,
+    payment_method_collection: 'always',
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?upgraded=true${(planConfig as any).trialDays ? '&trial=true' : ''}`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
     metadata: { user_id: user.id, plan },
   })
