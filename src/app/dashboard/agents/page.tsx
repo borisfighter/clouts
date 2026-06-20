@@ -18,6 +18,7 @@ export default function AgentsPage() {
   const [analysis, setAnalysis] = useState<any>(null)
   const [lastRun, setLastRun] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<string[]>([])
+  const [agentError, setAgentError] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -45,6 +46,7 @@ export default function AgentsPage() {
     if (!brand) return
     setRunning(type)
     setAnalysis(null)
+    setAgentError('')
     try {
       const res = await fetch('/api/agents/run', {
         method: 'POST',
@@ -52,10 +54,16 @@ export default function AgentsPage() {
         body: JSON.stringify({ brandId: brand.id, agentType: type }),
       })
       const data = await res.json()
+      if (!res.ok || data.error) {
+        setAgentError(data.error || 'Failed to run agent — please try again')
+        return
+      }
       if (data.analysis) {
         setAnalysis(data.analysis)
         setLastRun(new Date().toISOString())
       }
+    } catch {
+      setAgentError('Failed to run agent — check your connection and try again')
     } finally {
       setRunning(null)
     }
@@ -103,6 +111,17 @@ export default function AgentsPage() {
           </div>
         ))}
       </div>
+
+      {agentError && (
+        <div className="rounded-xl border border-red-400/20 bg-red-400/[0.08] px-4 py-2.5 text-sm text-red-300 flex items-center justify-between gap-3">
+          <span>{agentError}</span>
+          {agentError.toLowerCase().includes('upgrade') && (
+            <a href="/pricing" className="shrink-0 rounded-lg bg-red-400/15 px-3 py-1 text-xs font-bold text-red-200 hover:bg-red-400/25 transition-colors">
+              Upgrade →
+            </a>
+          )}
+        </div>
+      )}
 
       {!brand && (
         <div className="rounded-2xl border border-dashed border-white/[0.08] p-10 text-center">
