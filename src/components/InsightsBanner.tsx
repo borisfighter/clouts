@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Lightbulb, ArrowRight } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 const ENGINE_TIPS: Record<string, string[]> = {
   low_rate:       ['Create an FAQ page answering your top 5 keywords', 'Add JSON-LD schema markup to your homepage', 'Publish a comprehensive "What is [Brand]?" guide'],
@@ -18,10 +19,15 @@ interface Props {
 }
 
 export function InsightsBanner({ mentionRate, avgScore, hasCitedUrls, sentiment }: Props) {
+  // Use client-only state to avoid SSR/hydration mismatch from Date.now()
+  const [tipIndex, setTipIndex] = useState(0)
+  useEffect(() => {
+    setTipIndex(Math.floor(Date.now() / (1000 * 60 * 60 * 4)) % 3)
+  }, [])
+
   let tip: string
   let key: string
 
-  const tipIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 4)) % 3 // Rotate every 4 hours
   if (mentionRate < 25) { key = 'low_rate'; tip = ENGINE_TIPS.low_rate[tipIndex % ENGINE_TIPS.low_rate.length] }
   else if (!hasCitedUrls) { key = 'no_citation'; tip = ENGINE_TIPS.no_citation[tipIndex % ENGINE_TIPS.no_citation.length] }
   else if (sentiment === 'negative') { key = 'neg_sentiment'; tip = ENGINE_TIPS.neg_sentiment[tipIndex % ENGINE_TIPS.neg_sentiment.length] }

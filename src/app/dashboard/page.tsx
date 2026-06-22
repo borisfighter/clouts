@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { OnboardingChecklist } from '@/components/OnboardingChecklist'
 import { InsightsBanner } from '@/components/InsightsBanner'
@@ -11,7 +12,7 @@ const ENGINE_COLORS: Record<string, string> = {
   perplexity: '#8b5cf6', chatgpt: '#10b981', gemini: '#3b82f6', grok: '#f59e0b', claude: '#ec4899',
 }
 
-export default function DashboardPage() {
+function DashboardPageInner() {
   const supabase = createClient()
   const [brand, setBrand] = useState<any>(null)
   const [user, setUser] = useState<any>(null)
@@ -24,6 +25,9 @@ export default function DashboardPage() {
   const [agentRan, setAgentRan] = useState(false)
   const [shareSlug, setShareSlug] = useState<string | null>(null)
   const [scanMsg, setScanMsg] = useState('')
+  const searchParams = useSearchParams()
+  const showUpgraded = searchParams.get('upgraded') === 'true'
+  const showTrial = searchParams.get('trial') === 'true'
 
   async function loadData(brandId: string) {
     const [{ data: mentions }, { count: clipCount }] = await Promise.all([
@@ -283,7 +287,7 @@ export default function DashboardPage() {
           { href: '/dashboard/visibility', icon: Radio,    label: 'AI Visibility',  color: 'hover:border-violet-500/30 hover:text-violet-300' },
           { href: '/dashboard/clips',      icon: Scissors, label: 'Create Clip',    color: 'hover:border-emerald-400/30 hover:text-emerald-300' },
           { href: '/dashboard/agents',     icon: Bot,      label: 'Run Agent',      color: 'hover:border-pink-400/30 hover:text-pink-300' },
-          { href: '/pricing',              icon: Zap,      label: 'Upgrade Plan',   color: 'hover:border-violet-500/30 hover:text-violet-300' },
+          { href: userPlan === 'free' ? '/pricing' : '/dashboard/settings', icon: Zap, label: userPlan === 'free' ? 'Upgrade Plan' : 'Manage Plan', color: 'hover:border-violet-500/30 hover:text-violet-300' },
         ].map(({ href, icon: Icon, label, color }) => (
           <Link key={href} href={href}
             className={`flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3 text-sm font-medium text-white/40 transition-all ${color}`}>
@@ -292,5 +296,13 @@ export default function DashboardPage() {
         ))}
       </div>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardPageInner />
+    </Suspense>
   )
 }
