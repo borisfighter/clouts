@@ -93,7 +93,7 @@ export default function DashboardPage() {
         body: JSON.stringify({ brandId: brand.id, engines: userPlan === 'free' ? ['perplexity'] : ['perplexity', 'chatgpt', 'gemini', 'grok', 'claude'] }),
       })
       const data = await res.json()
-      if (data.error) { setScanMsg(`Error: ${data.error}`); return }
+      if (data.error) { setScanMsg(`⚠ ${data.error}`); return }
       setScanMsg(`✓ ${data.mentioned}/${data.scraped} mentions detected`)
       await loadData(brand.id)
     } catch { setScanMsg('Scan failed') }
@@ -139,7 +139,7 @@ export default function DashboardPage() {
           { id: 'keywords', label: 'Add tracking keywords',      done: (brand?.keywords?.length || 0) > 0, href: '/dashboard/settings' },
           { id: 'scan',     label: 'Run your first AI scan',     done: stats.totalScans > 0,           href: '/dashboard/visibility' },
           { id: 'agent',    label: 'Run the AEO agent',          done: agentRan,                       href: '/dashboard/agents' },
-          { id: 'share',    label: 'Share your visibility report', done: !!shareSlug,                  href: '/dashboard/settings' },
+          { id: 'share',    label: 'Share your visibility report', done: !!shareSlug,                  href: '/dashboard/visibility' },
         ]} />
       )}
 

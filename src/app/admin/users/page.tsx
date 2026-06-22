@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { Search, ChevronLeft, ChevronRight, Trash2, Edit2, X, Loader2 } from 'lucide-react'
+import { useRef } from 'react'
 
 const PLANS = ['free', 'pro', 'team']
 const planBadge = (p: string) => ({ pro: 'text-violet-400 bg-violet-400/10 border-violet-400/20', team: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20', free: 'text-white/30 bg-white/[0.04] border-white/[0.08]' }[p] || 'text-white/30 bg-white/[0.04] border-white/[0.08]')
@@ -10,6 +11,8 @@ export default function AdminUsersPage() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [q, setQ] = useState('')
+  const [inputQ, setInputQ] = useState('')
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
   const [planFilter, setPlanFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [editingPlan, setEditingPlan] = useState<string | null>(null)
@@ -84,7 +87,11 @@ export default function AdminUsersPage() {
       <div className="flex gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" />
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search by email..."
+          <input value={inputQ} onChange={e => {
+            setInputQ(e.target.value)
+            if (debounceRef.current) clearTimeout(debounceRef.current)
+            debounceRef.current = setTimeout(() => setQ(e.target.value), 300)
+          }} placeholder="Search by email..."
             className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-9 pr-4 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-white/20" />
         </div>
         <div className="flex rounded-xl border border-white/[0.08] bg-white/[0.04] p-1 gap-1">

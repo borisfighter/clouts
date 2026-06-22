@@ -177,15 +177,33 @@ function SettingsInner() {
         setShareSlug(updates.share_slug)
       }
     } else {
+      // Check plan brand limit before inserting
+      const { data: planUser } = await supabase.from('users').select('plan').eq('id', user.id).single()
+      const userPlanKey = planUser?.plan || 'free'
+      const brandLimit = userPlanKey === 'free' ? 1 : userPlanKey === 'starter' ? 1 : userPlanKey === 'pro' ? 5 : -1
+      if (brandLimit !== -1) {
+        const { count } = await supabase.from('brands').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+        if ((count || 0) >= brandLimit) {
+          setBrandActionError(`Brand limit reached (${brandLimit} on the ${userPlanKey} plan). Upgrade to add more brands.`)
+          setSaving(false)
+          return
+        }
+      }
+
+      // Generate share_slug for new brand
+      const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      const newBrandSlug = slugBase + '-' + Math.random().toString(36).slice(2, 10)
+
       // Unset current default before inserting new brand as default
       await supabase.from('brands').update({ is_default: false }).eq('user_id', user.id).eq('is_default', true)
       const { data, error } = await supabase.from('brands').insert({
-        user_id: user.id, name, domain, keywords, competitors, is_default: true,
+        user_id: user.id, name, domain, keywords, competitors, is_default: true, share_slug: newBrandSlug,
       }).select().single()
       if (error || !data) {
         saveFailed = true
       } else {
         setBrandId(data.id)
+        setShareSlug(newBrandSlug)
       }
     }
 

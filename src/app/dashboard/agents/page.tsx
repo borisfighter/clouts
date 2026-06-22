@@ -19,6 +19,7 @@ export default function AgentsPage() {
   const [lastRun, setLastRun] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<string[]>([])
   const [agentError, setAgentError] = useState('')
+  const [mentionCount, setMentionCount] = useState<number | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -27,6 +28,9 @@ export default function AgentsPage() {
       const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
       setBrand(b)
       if (b) {
+        // Load mention count to warn if running with no data
+        const { count } = await supabase.from('mentions').select('*', { count: 'exact', head: true }).eq('brand_id', b.id)
+        setMentionCount(count || 0)
         // Load last AEO run from DB
         const { data: agent } = await supabase.from('agents').select('id, last_run_at').eq('brand_id', b.id).eq('type', 'aeo').single()
         if (agent) {
@@ -111,6 +115,16 @@ export default function AgentsPage() {
           </div>
         ))}
       </div>
+
+      {brand && mentionCount === 0 && (
+        <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/[0.06] px-4 py-3 flex items-start gap-3">
+          <span className="text-yellow-400 shrink-0 mt-0.5">⚠</span>
+          <div>
+            <p className="text-sm text-yellow-300 font-medium">No scan data yet</p>
+            <p className="text-xs text-yellow-300/60 mt-0.5">The AEO agent works best with real scan data. <a href="/dashboard/visibility" className="underline hover:text-yellow-200">Run a scan first</a> — the agent still works now but will use generic recommendations.</p>
+          </div>
+        </div>
+      )}
 
       {agentError && (
         <div className="rounded-xl border border-red-400/20 bg-red-400/[0.08] px-4 py-2.5 text-sm text-red-300 flex items-center justify-between gap-3">

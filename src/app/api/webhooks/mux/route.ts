@@ -5,9 +5,15 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { type, data } = body
 
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey || serviceKey.includes('REPLACE')) {
+    console.error('[mux webhook] SUPABASE_SERVICE_ROLE_KEY not configured — cannot update clip status')
+    return NextResponse.json({ error: 'Database not configured' }, { status: 503 })
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    serviceKey,
     { cookies: { getAll: () => [], setAll: () => {} } }
   )
 
