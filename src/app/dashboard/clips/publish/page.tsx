@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, Send, Check, Scissors, ExternalLink } from 'lucide-react'
@@ -13,7 +13,7 @@ const PLATFORMS = [
   { id: 'twitter',   label: 'X (Twitter)',       icon: '🐦', desc: 'Up to 2:20, horizontal preferred', color: 'border-white/20 hover:border-white/40 hover:bg-white/[0.04]' },
 ]
 
-export default function PublishQueuePage() {
+function PublishQueuePage() {
   const supabase = createClient()
   const searchParams = useSearchParams()
   const [clips, setClips] = useState<any[]>([])
@@ -192,5 +192,13 @@ export default function PublishQueuePage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function PublishPage() {
+  return (
+    <Suspense fallback={<div className="flex h-48 items-center justify-center"><span className="text-white/20 text-sm">Loading…</span></div>}>
+      <PublishQueuePage />
+    </Suspense>
   )
 }

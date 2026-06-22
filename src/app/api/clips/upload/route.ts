@@ -34,8 +34,13 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  const muxId2 = process.env.MUX_TOKEN_ID
+  const muxSecret2 = process.env.MUX_TOKEN_SECRET
+  const willProcess = !!(muxId2 && muxSecret2 && !muxId2.includes('REPLACE') && muxId2.length > 5 && sourceUrl)
+  const initialStatus = willProcess ? 'processing' : sourceUrl ? 'awaiting_upload' : 'awaiting_upload'
+
   const { data: clip, error } = await supabase.from('clips').insert({
-    brand_id: brandId, title, source_url: sourceUrl || null, status: 'processing',
+    brand_id: brandId, title, source_url: sourceUrl || null, status: initialStatus,
   }).select().single()
 
   if (error || !clip) return NextResponse.json({ error: 'Failed to create clip' }, { status: 500 })

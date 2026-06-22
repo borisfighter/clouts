@@ -10,6 +10,10 @@ interface Clip {
   created_at: string; tags: string[]; views: number
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  ready: 'Ready', processing: 'Processing', awaiting_upload: 'Awaiting upload', failed: 'Failed',
+}
+
 const STATUS_COLORS: Record<string, string> = {
   ready: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
   processing: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
@@ -146,7 +150,7 @@ export default function LibraryPage() {
                 </div>
                 <div className="absolute top-2 right-2">
                   <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[clip.status] || 'text-white/30 bg-white/[0.04] border-white/[0.08]'}`}>
-                    {clip.status}
+                    {STATUS_LABEL[clip.status] || clip.status}
                   </span>
                 </div>
               </div>
@@ -154,7 +158,16 @@ export default function LibraryPage() {
                 <p className="text-sm font-semibold text-white truncate">{clip.title}</p>
                 <p className="text-xs text-white/30 mt-0.5">{new Date(clip.created_at).toLocaleDateString()}</p>
                 <div className="mt-2.5 flex gap-1">
-                  <button title="Download" className="flex-1 flex items-center justify-center rounded-lg border border-white/[0.07] py-1.5 text-white/30 hover:text-white hover:border-white/20 transition-colors"><Download size={11} /></button>
+                  {clip.mux_playback_id ? (
+                    <a href={`https://stream.mux.com/${clip.mux_playback_id}?download=1`} target="_blank" rel="noopener"
+                      title="Download" className="flex-1 flex items-center justify-center rounded-lg border border-white/[0.07] py-1.5 text-white/30 hover:text-white hover:border-white/20 transition-colors">
+                      <Download size={11} />
+                    </a>
+                  ) : (
+                    <span title="Not ready for download" className="flex-1 flex items-center justify-center rounded-lg border border-white/[0.05] py-1.5 text-white/10 cursor-not-allowed">
+                      <Download size={11} />
+                    </span>
+                  )}
                   <button onClick={() => handleDelete(clip.id)} title="Delete" disabled={deleting === clip.id}
                     className="flex-1 flex items-center justify-center rounded-lg border border-white/[0.07] py-1.5 text-white/30 hover:text-red-400 hover:border-red-400/20 transition-colors disabled:opacity-40">
                     {deleting === clip.id ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
@@ -178,10 +191,19 @@ export default function LibraryPage() {
                   <p className="text-sm font-semibold text-white truncate">{clip.title}</p>
                   <p className="text-xs text-white/30">{new Date(clip.created_at).toLocaleDateString()} · {clip.format || '16:9'}</p>
                 </div>
-                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[clip.status] || ''}`}>{clip.status}</span>
+                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[clip.status] || ''}`}>{STATUS_LABEL[clip.status] || clip.status}</span>
                 <p className="text-xs text-white/30 w-16 text-right">{clip.views || 0} views</p>
                 <div className="flex gap-1">
-                  <button className="p-1.5 rounded-lg text-white/30 hover:text-white transition-colors"><Download size={13} /></button>
+                  {clip.mux_playback_id ? (
+                    <a href={`https://stream.mux.com/${clip.mux_playback_id}?download=1`} target="_blank" rel="noopener"
+                      className="p-1.5 rounded-lg text-white/30 hover:text-white transition-colors">
+                      <Download size={13} />
+                    </a>
+                  ) : (
+                    <span title="Not ready" className="p-1.5 rounded-lg text-white/10 cursor-not-allowed">
+                      <Download size={13} />
+                    </span>
+                  )}
                   <button onClick={() => handleDelete(clip.id)} disabled={deleting === clip.id}
                     className="p-1.5 rounded-lg text-white/30 hover:text-red-400 transition-colors disabled:opacity-40">
                     {deleting === clip.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}

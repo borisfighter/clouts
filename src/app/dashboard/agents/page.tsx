@@ -15,6 +15,7 @@ export default function AgentsPage() {
   const [brand, setBrand] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState<string | null>(null)
+  const [rerunning, setRerunning] = useState(false)
   const [analysis, setAnalysis] = useState<any>(null)
   const [lastRun, setLastRun] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<string[]>([])
@@ -49,7 +50,8 @@ export default function AgentsPage() {
   const runAgent = async (type: string) => {
     if (!brand) return
     setRunning(type)
-    setAnalysis(null)
+    setRerunning(!!analysis)  // track if re-running over existing results
+    if (!analysis) setAnalysis(null)  // only blank if no previous results
     setAgentError('')
     try {
       const res = await fetch('/api/agents/run', {
@@ -70,6 +72,7 @@ export default function AgentsPage() {
       setAgentError('Failed to run agent — check your connection and try again')
     } finally {
       setRunning(null)
+      setRerunning(false)
     }
   }
 
@@ -148,6 +151,12 @@ export default function AgentsPage() {
       {/* AEO Analysis results */}
       {analysis && (
         <div className="space-y-4">
+          {rerunning && (
+            <div className="flex items-center gap-2 rounded-xl border border-violet-500/20 bg-violet-500/[0.06] px-4 py-2.5">
+              <Loader2 size={13} className="animate-spin text-violet-400 shrink-0" />
+              <p className="text-xs text-violet-300">Re-running agent — results will update when complete…</p>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <h2 className="text-sm font-bold text-white">AEO Analysis Results</h2>
             <div className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${scoreColor(analysis.overallScore)}`}>
