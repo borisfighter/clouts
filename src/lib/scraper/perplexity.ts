@@ -1,3 +1,5 @@
+import { analyzeMention } from './analyze'
+
 export interface ScrapeResult {
   engine: string
   prompt: string
@@ -15,23 +17,6 @@ const PERPLEXITY_API_KEY = (() => {
   return (!k || k.includes('REPLACE') || k.length < 20) ? undefined : k
 })()
 
-function analyzeMention(text: string, brandName: string, domain: string) {
-  const lower = text.toLowerCase()
-  const b = brandName.toLowerCase()
-  const d = domain.toLowerCase().replace('www.', '')
-  const mentioned = lower.includes(b) || lower.includes(d)
-  if (!mentioned) return { mentioned: false, sentiment: null as any, position: null, score: 0 }
-  const sentences = text.split(/[.!?]+/)
-  const position = sentences.findIndex(s => s.toLowerCase().includes(b) || s.toLowerCase().includes(d)) + 1
-  const positiveWords = ['best','excellent','great','top','leading','recommended','popular','trusted','powerful','effective']
-  const negativeWords = ['bad','poor','avoid','worst','expensive','complicated','limited','weak','unreliable']
-  const ctx = sentences.filter(s => s.toLowerCase().includes(b) || s.toLowerCase().includes(d)).join(' ').toLowerCase()
-  const posCount = positiveWords.filter(w => ctx.includes(w)).length
-  const negCount = negativeWords.filter(w => ctx.includes(w)).length
-  const sentiment = posCount > negCount ? 'positive' : negCount > posCount ? 'negative' : 'neutral'
-  const score = Math.min(100, Math.max(0, Math.max(0, 100-(position-1)*15) + (sentiment==='positive'?10:sentiment==='negative'?-10:0)))
-  return { mentioned: true, sentiment: sentiment as any, position, score }
-}
 
 function getMock(query: string, brandName: string, domain: string): ScrapeResult {
   const responses = [

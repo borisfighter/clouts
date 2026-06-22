@@ -4,7 +4,7 @@ export function ShareReportActions({ brandName, slug }: { brandName: string; slu
   const tweetUrl = `https://twitter.com/intent/tweet?text=Check+out+${encodeURIComponent(brandName)}%27s+AI+visibility+report&url=${encodeURIComponent(`https://www.clouts.com/r/${slug}`)}`
 
   return (
-    <div className="hidden sm:flex items-center gap-2">
+    <div className="hidden sm:flex items-center gap-2 no-print">
       <a
         href={tweetUrl}
         target="_blank"

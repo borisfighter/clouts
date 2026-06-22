@@ -67,9 +67,14 @@ export default function PublishQueuePage() {
           : `Failed to queue — please try again`
       )
     }
-    // Refresh queued
-    const { data: q } = await supabase.from('clip_publishes').select('*').eq('clip_id', selectedClip)
-    setQueued(prev => [...(q || []), ...prev])
+    // Refresh full queue history scoped to brand's clips (deduplicated by id)
+    const allClipIds = clips.map((clip: any) => clip.id)
+    if (allClipIds.length > 0) {
+      const { data: freshQ } = await supabase.from('clip_publishes')
+        .select('*, clips(title, status)').in('clip_id', allClipIds)
+        .order('created_at', { ascending: false }).limit(30)
+      setQueued(freshQ || [])
+    }
     if (succeeded.length > 0) {
       setTimeout(() => { setSelectedClip(null); setSelectedPlatforms([]); setPublished([]) }, 3000)
     }
@@ -166,6 +171,7 @@ export default function PublishQueuePage() {
                 <span className="text-lg">{PLATFORMS.find(p => p.id === item.platform)?.icon || '📤'}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-white/60">{PLATFORMS.find(p => p.id === item.platform)?.label || item.platform}</p>
+                  {item.clips?.title && <p className="text-[10px] text-white/25 truncate mt-0.5">"{item.clips.title}"</p>}
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                   item.status === 'published' ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' :

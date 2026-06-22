@@ -1,24 +1,11 @@
 import { ScrapeResult } from './perplexity'
+import { analyzeMention } from './analyze'
 
 const GEMINI_API_KEY = (() => {
   const k = process.env.GEMINI_API_KEY
   return (!k || k.includes('REPLACE') || k.length < 20) ? undefined : k
 })()
 
-function analyzeMention(text: string, brandName: string, domain: string) {
-  const lower = text.toLowerCase()
-  const b = brandName.toLowerCase()
-  const d = domain.toLowerCase().replace('www.', '')
-  const mentioned = lower.includes(b) || lower.includes(d)
-  if (!mentioned) return { mentioned: false, sentiment: null as any, position: null, score: 0 }
-  const sentences = text.split(/[.!?]+/)
-  const position = sentences.findIndex(s => s.toLowerCase().includes(b) || s.toLowerCase().includes(d)) + 1
-  const pos = ['best','great','top','leading','recommended','trusted'].filter(w => lower.includes(w)).length
-  const neg = ['bad','poor','avoid','worst','limited','weak'].filter(w => lower.includes(w)).length
-  const sentiment = pos > neg ? 'positive' : neg > pos ? 'negative' : 'neutral'
-  const score = Math.min(100, Math.max(0, Math.max(0, 100-(position-1)*15) + (sentiment==='positive'?10:sentiment==='negative'?-10:0)))
-  return { mentioned: true, sentiment: sentiment as any, position, score }
-}
 
 function getMock(query: string, brandName: string, domain: string): ScrapeResult {
   const responses = [

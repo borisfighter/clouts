@@ -86,7 +86,7 @@ export default async function ShareReportPage({ params }: { params: { slug: stri
           <span className="text-xs text-white/30">AI Visibility Report · {generatedDate}</span>
           <ShareReportActions brandName={brand.name} slug={params.slug} />
           <Link href="/auth/signup"
-            className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold hover:bg-violet-500 transition-colors">
+            className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold hover:bg-violet-500 transition-colors no-print">
             Get your report →
           </Link>
         </div>
@@ -223,7 +223,7 @@ export default async function ShareReportPage({ params }: { params: { slug: stri
         )}
 
         {/* Embed badge */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-3">
+        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-3 no-print">
           <h2 className="text-sm font-bold text-white">Embed this report</h2>
           <p className="text-xs text-white/40">Add an AI visibility badge to your website, README, or marketing materials.</p>
           <div className="rounded-xl border border-white/[0.07] bg-black/40 p-3 font-mono text-[11px] text-white/50 overflow-x-auto">
@@ -237,7 +237,7 @@ export default async function ShareReportPage({ params }: { params: { slug: stri
         </div>
 
         {/* CTA */}
-        <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.06] p-8 text-center">
+        <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.06] p-8 text-center no-print">
           <p className="text-lg font-black text-white mb-2">Monitor your own brand in AI search</p>
           <p className="text-sm text-white/40 mb-6">
             Clouts tracks ChatGPT, Perplexity, Claude, Gemini, and Grok — and tells you exactly how to rank higher.

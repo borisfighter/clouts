@@ -341,7 +341,7 @@ function SettingsInner() {
         <button type="submit" disabled={saving || !name || !domain}
           className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-60 transition-colors">
           {saving ? <Loader2 size={14} className="animate-spin" /> : saved ? <Check size={14} /> : <Save size={14} />}
-          {saved ? (isWelcome ? 'Saved! Redirecting...' : 'Saved!') : (isWelcome ? 'Save & start scanning' : 'Save brand')}
+          {saving ? (isNew ? 'Creating…' : 'Saving…') : saved ? (isNew ? 'Created!' : isWelcome ? 'Saved! Redirecting...' : 'Saved!') : isNew ? 'Create brand' : isWelcome ? 'Save & start scanning' : 'Save changes'}
         </button>
       </form>
 
