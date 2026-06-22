@@ -15,36 +15,43 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true)
   const [range, setRange] = useState(30)
 
+  // Load brand once
   useEffect(() => {
-    async function load() {
+    async function loadBrand() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return setLoading(false)
+      if (!user) { setLoading(false); return }
       const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
       setBrand(b)
-      if (b) {
-        const since = new Date(Date.now() - range * 86400000).toISOString()
-        const { data: m } = await supabase.from('mentions').select('engine, mentioned, scraped_at')
-          .eq('brand_id', b.id).gte('scraped_at', since).order('scraped_at', { ascending: false })
-
-        const byDay: Record<string, { total: number; mentioned: number; engines: Set<string> }> = {}
-        for (const mention of m || []) {
-          const day = mention.scraped_at.slice(0, 10)
-          if (!byDay[day]) byDay[day] = { total: 0, mentioned: 0, engines: new Set() }
-          byDay[day].total++
-          if (mention.mentioned) byDay[day].mentioned++
-          byDay[day].engines.add(mention.engine)
-        }
-        const sorted = Object.entries(byDay).map(([date, d]) => ({
-          date, total: d.total, mentioned: d.mentioned,
-          engines: Array.from(d.engines),
-          rate: Math.round((d.mentioned / d.total) * 100),
-        })).sort((a, b) => b.date.localeCompare(a.date))
-        setGroups(sorted)
-      }
       setLoading(false)
     }
-    load()
-  }, [range])
+    loadBrand()
+  }, [])
+
+  // Reload groups when brand or range changes
+  useEffect(() => {
+    if (!brand) return
+    async function loadGroups() {
+      const since = new Date(Date.now() - range * 86400000).toISOString()
+      const { data: m } = await supabase.from('mentions').select('engine, mentioned, scraped_at')
+        .eq('brand_id', brand.id).gte('scraped_at', since).order('scraped_at', { ascending: false })
+
+      const byDay: Record<string, { total: number; mentioned: number; engines: Set<string> }> = {}
+      for (const mention of m || []) {
+        const day = mention.scraped_at.slice(0, 10)
+        if (!byDay[day]) byDay[day] = { total: 0, mentioned: 0, engines: new Set() }
+        byDay[day].total++
+        if (mention.mentioned) byDay[day].mentioned++
+        byDay[day].engines.add(mention.engine)
+      }
+      const sorted = Object.entries(byDay).map(([date, d]) => ({
+        date, total: d.total, mentioned: d.mentioned,
+        engines: Array.from(d.engines),
+        rate: Math.round((d.mentioned / d.total) * 100),
+      })).sort((a, b) => b.date.localeCompare(a.date))
+      setGroups(sorted)
+    }
+    loadGroups()
+  }, [brand, range])
 
   if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/20" /></div>
 

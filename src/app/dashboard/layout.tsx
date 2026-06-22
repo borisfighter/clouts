@@ -169,7 +169,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </button>
               ))}
               <div className="border-t border-white/[0.07]">
-                <Link href="/dashboard/settings" onClick={() => setShowBrandMenu(false)}
+                <Link href="/dashboard/settings?new=1" onClick={() => setShowBrandMenu(false)}
                   className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-white/40 hover:text-white hover:bg-white/[0.04] transition-colors">
                   <Plus size={11} /> Add brand
                 </Link>

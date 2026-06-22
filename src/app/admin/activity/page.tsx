@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { Loader2, RefreshCw, Radio, Scissors, Bot, User } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 
 const EVENT_ICONS: Record<string, any> = {
   scan: Radio, clip: Scissors, agent: Bot, signup: User,
@@ -15,56 +14,44 @@ const EVENT_COLORS: Record<string, string> = {
 }
 
 export default function AdminActivityPage() {
-  const supabase = createClient()
   const [feed, setFeed] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all'|'scan'|'clip'|'agent'|'signup'>('all')
   const [counts, setCounts] = useState({ all: 0, scan: 0, clip: 0, agent: 0, signup: 0 })
+  const [partial, setPartial] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
-    const since = new Date(Date.now() - 7 * 86400000).toISOString()
+    const res = await fetch('/api/admin/activity')
+    const data = await res.json()
+    setPartial(!!data._partial)
 
-    const [{ data: m }, { data: c }, { data: a }, { data: u }] = await Promise.all([
-      supabase.from('mentions')
-        .select('id, engine, mentioned, scraped_at, brands(name, users(email))')
-        .gte('scraped_at', since).order('scraped_at', { ascending: false }).limit(150),
-      supabase.from('clips')
-        .select('id, title, status, created_at, brands(name, users(email))')
-        .gte('created_at', since).order('created_at', { ascending: false }).limit(50),
-      supabase.from('agent_runs')
-        .select('id, status, started_at, agents(type, brands(name, users(email)))')
-        .gte('started_at', since).order('started_at', { ascending: false }).limit(50),
-      supabase.from('users')
-        .select('id, email, created_at, plan')
-        .gte('created_at', since).order('created_at', { ascending: false }).limit(30),
-    ])
-
-    const scans = (m || []).map((x: any) => ({
+    const scans = (data.mentions || []).map((x: any) => ({
       type: 'scan', at: x.scraped_at,
       email: x.brands?.users?.email || 'unknown',
       brand: x.brands?.name || '—',
       desc: `${x.engine} — ${x.mentioned ? '✓ mentioned' : '✗ not mentioned'}`,
     }))
-    const clipItems = (c || []).map((x: any) => ({
+    const clipItems = (data.clips || []).map((x: any) => ({
       type: 'clip', at: x.created_at,
       email: x.brands?.users?.email || 'unknown',
       brand: x.brands?.name || '—',
       desc: `Clip: "${x.title || 'untitled'}" (${x.status})`,
     }))
-    const agentItems = (a || []).map((x: any) => ({
+    const agentItems = (data.agents || []).map((x: any) => ({
       type: 'agent', at: x.started_at,
       email: x.agents?.brands?.users?.email || 'unknown',
       brand: x.agents?.brands?.name || '—',
       desc: `${x.agents?.type || 'unknown'} agent — ${x.status}`,
     }))
-    const signupItems = (u || []).map((x: any) => ({
+    const signupItems = (data.users || []).map((x: any) => ({
       type: 'signup', at: x.created_at,
       email: x.email, brand: '—',
       desc: `New signup · ${x.plan || 'free'} plan`,
     }))
 
-    const all = [...scans, ...clipItems, ...agentItems, ...signupItems].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+    const all = [...scans, ...clipItems, ...agentItems, ...signupItems]
+      .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
     setFeed(all)
     setCounts({ all: all.length, scan: scans.length, clip: clipItems.length, agent: agentItems.length, signup: signupItems.length })
     setLoading(false)
@@ -85,6 +72,12 @@ export default function AdminActivityPage() {
           <RefreshCw size={12} /> Refresh
         </button>
       </div>
+
+      {partial && (
+        <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/[0.06] px-4 py-3 text-xs text-yellow-300">
+          ⚠ Showing limited data — add <code className="font-mono bg-white/10 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code> in Vercel to see all users' activity.
+        </div>
+      )}
 
       <div className="flex gap-2 flex-wrap">
         {(['all', 'scan', 'clip', 'agent', 'signup'] as const).map(f => (

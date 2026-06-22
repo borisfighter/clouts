@@ -72,9 +72,20 @@ export default function ClipsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this clip?')) return
+    if (!confirm('Delete this clip? This also removes the video from Mux.')) return
     setDeleting(id)
-    await supabase.from('clips').delete().eq('id', id)
+    setErrorMsg('')
+    const res = await fetch('/api/clips/delete', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clipId: id }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || data.error) {
+      setErrorMsg(data.error || 'Failed to delete clip — please try again')
+      setDeleting(null)
+      return
+    }
     setClips(c => c.filter(x => x.id !== id))
     setDeleting(null)
   }

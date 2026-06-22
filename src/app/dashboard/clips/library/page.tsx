@@ -41,12 +41,17 @@ export default function LibraryPage() {
   }, [])
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this clip?')) return
+    if (!confirm('Delete this clip? This also removes the video from Mux.')) return
     setDeleting(id)
     setLibraryError('')
-    const { error } = await supabase.from('clips').delete().eq('id', id)
-    if (error) {
-      setLibraryError('Failed to delete clip — please try again')
+    const res = await fetch('/api/clips/delete', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clipId: id }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || data.error) {
+      setLibraryError(data.error || 'Failed to delete clip — please try again')
       setDeleting(null)
       return
     }

@@ -16,6 +16,7 @@ function SettingsInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isWelcome = searchParams.get('welcome') === '1'
+  const isNew = searchParams.get('new') === '1'
 
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -52,11 +53,14 @@ function SettingsInner() {
         if (u.notif_weekly_report !== null) setNotifWeeklyReport(u.notif_weekly_report ?? true)
         if (u.notif_sentiment_alerts !== null) setNotifSentimentAlerts(u.notif_sentiment_alerts ?? false)
       }
-      const { data } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
-      if (data) {
-        setBrandId(data.id); setName(data.name || ''); setDomain(data.domain || '')
-        setKeywords(data.keywords || []); setCompetitors(data.competitors || [])
-        setShareSlug(data.share_slug || null)
+      // Skip loading existing brand when creating a new one (?new=1)
+      if (!isNew) {
+        const { data } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
+        if (data) {
+          setBrandId(data.id); setName(data.name || ''); setDomain(data.domain || '')
+          setKeywords(data.keywords || []); setCompetitors(data.competitors || [])
+          setShareSlug(data.share_slug || null)
+        }
       }
       setFetching(false)
     }
@@ -152,6 +156,8 @@ function SettingsInner() {
         setShareSlug(updates.share_slug)
       }
     } else {
+      // Unset current default before inserting new brand as default
+      await supabase.from('brands').update({ is_default: false }).eq('user_id', user.id).eq('is_default', true)
       const { data, error } = await supabase.from('brands').insert({
         user_id: user.id, name, domain, keywords, competitors, is_default: true,
       }).select().single()
@@ -173,7 +179,7 @@ function SettingsInner() {
       return
     }
     setSaved(true)
-    setTimeout(() => { setSaved(false); if (isWelcome) router.push('/dashboard/visibility') }, 2000)
+    setTimeout(() => { setSaved(false); if (isWelcome) router.push('/dashboard/visibility'); else if (isNew) window.location.href = '/dashboard' }, 2000)
   }
 
   const saveNotif = async (field: string, value: boolean) => {
@@ -205,8 +211,8 @@ function SettingsInner() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-white tracking-tight">Settings</h1>
-        <p className="mt-1 text-sm text-white/40">Manage your brand, plan, and account</p>
+        <h1 className="text-2xl font-black text-white tracking-tight">{isNew ? 'New Brand' : 'Settings'}</h1>
+        <p className="mt-1 text-sm text-white/40">{isNew ? 'Set up a new brand to track' : 'Manage your brand, plan, and account'}</p>
       </div>
 
       {/* Welcome banner */}

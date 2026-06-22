@@ -16,23 +16,30 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [range, setRange] = useState<'7d' | '30d' | '90d'>('30d')
 
+  // Load brand once on mount
   useEffect(() => {
-    async function load() {
+    async function loadBrand() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return setLoading(false)
+      if (!user) { setLoading(false); return }
       const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
       setBrand(b)
-      if (b) {
-        const days = range === '7d' ? 7 : range === '30d' ? 30 : 90
-        const since = new Date(Date.now() - days * 86400000).toISOString()
-        const { data: m } = await supabase.from('mentions').select('*')
-          .eq('brand_id', b.id).gte('scraped_at', since).order('scraped_at', { ascending: true })
-        setMentions(m || [])
-      }
       setLoading(false)
     }
-    load()
-  }, [range])
+    loadBrand()
+  }, [])
+
+  // Reload mentions when brand or range changes
+  useEffect(() => {
+    if (!brand) return
+    async function loadMentions() {
+      const days = range === '7d' ? 7 : range === '30d' ? 30 : 90
+      const since = new Date(Date.now() - days * 86400000).toISOString()
+      const { data: m } = await supabase.from('mentions').select('*')
+        .eq('brand_id', brand.id).gte('scraped_at', since).order('scraped_at', { ascending: true })
+      setMentions(m || [])
+    }
+    loadMentions()
+  }, [brand, range])
 
   // Engine breakdown
   const byEngine = Object.entries(
