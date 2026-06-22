@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { LayoutDashboard, Users, Globe, Radio, Scissors, Shield, Menu, X, Loader2, Plug } from 'lucide-react'
+import { LayoutDashboard, Users, Globe, Radio, Scissors, Shield, Menu, X, Loader2, Plug, Activity } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -14,6 +14,7 @@ const NAV = [
   { href: '/admin/mentions',      icon: Radio,           label: 'Mentions' },
   { href: '/admin/clips',         icon: Scissors,        label: 'Clips' },
   { href: '/admin/integrations',  icon: Plug,            label: 'Integrations' },
+  { href: '/admin/activity',       icon: Activity,        label: 'Activity' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -29,6 +29,10 @@ function SettingsInner() {
   const [copied, setCopied] = useState(false)
   const [deletingBrand, setDeletingBrand] = useState(false)
   const [brandActionError, setBrandActionError] = useState('')
+  const [notifScanComplete, setNotifScanComplete] = useState(true)
+  const [notifWeeklyReport, setNotifWeeklyReport] = useState(true)
+  const [notifSentimentAlerts, setNotifSentimentAlerts] = useState(false)
+  const [savingNotif, setSavingNotif] = useState(false)
 
   const [name, setName] = useState('')
   const [domain, setDomain] = useState('')
@@ -41,8 +45,13 @@ function SettingsInner() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return setFetching(false)
-      const { data: u } = await supabase.from('users').select('plan').eq('id', user.id).single()
-      if (u) setUserPlan(u.plan || 'free')
+      const { data: u } = await supabase.from('users').select('plan, notif_scan_complete, notif_weekly_report, notif_sentiment_alerts').eq('id', user.id).single()
+      if (u) {
+        setUserPlan(u.plan || 'free')
+        if (u.notif_scan_complete !== null) setNotifScanComplete(u.notif_scan_complete ?? true)
+        if (u.notif_weekly_report !== null) setNotifWeeklyReport(u.notif_weekly_report ?? true)
+        if (u.notif_sentiment_alerts !== null) setNotifSentimentAlerts(u.notif_sentiment_alerts ?? false)
+      }
       const { data } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
       if (data) {
         setBrandId(data.id); setName(data.name || ''); setDomain(data.domain || '')
@@ -165,6 +174,13 @@ function SettingsInner() {
     }
     setSaved(true)
     setTimeout(() => { setSaved(false); if (isWelcome) router.push('/dashboard/visibility') }, 2000)
+  }
+
+  const saveNotif = async (field: string, value: boolean) => {
+    setSavingNotif(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) await supabase.from('users').update({ [field]: value }).eq('id', user.id)
+    setSavingNotif(false)
   }
 
   const handleBillingPortal = async () => {
@@ -385,15 +401,19 @@ function SettingsInner() {
       <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-4">
         <h2 className="text-sm font-bold text-white">Notifications</h2>
         {[
-          { label: 'Scan complete emails', desc: 'Get emailed when an AI scan finishes with results' },
-          { label: 'Weekly visibility report', desc: 'Summary of AI mention rates every Monday' },
-          { label: 'Sentiment alerts', desc: 'Alert when brand sentiment turns negative' },
-        ].map(({ label, desc }, i) => (
+          { label: 'Scan complete emails', desc: 'Get emailed when an AI scan finishes with results', field: 'notif_scan_complete', value: notifScanComplete, set: setNotifScanComplete },
+          { label: 'Weekly visibility report', desc: 'Summary of AI mention rates every Monday', field: 'notif_weekly_report', value: notifWeeklyReport, set: setNotifWeeklyReport },
+          { label: 'Sentiment alerts', desc: 'Alert when brand sentiment turns negative', field: 'notif_sentiment_alerts', value: notifSentimentAlerts, set: setNotifSentimentAlerts },
+        ].map(({ label, desc, field, value, set }) => (
           <div key={label} className="flex items-start justify-between gap-4">
             <div><p className="text-sm text-white/70">{label}</p><p className="text-xs text-white/30 mt-0.5">{desc}</p></div>
-            <div className={`shrink-0 h-5 w-9 rounded-full relative cursor-pointer transition-colors ${i === 0 ? 'bg-violet-500/50 border border-violet-500/60' : 'bg-white/[0.08] border border-white/[0.10]'}`}>
-              <span className={`absolute top-0.5 h-4 w-4 rounded-full transition-transform ${i === 0 ? 'translate-x-4 bg-violet-300' : 'translate-x-0.5 bg-white/30'}`} />
-            </div>
+            <button
+              onClick={() => { const next = !value; set(next); saveNotif(field, next) }}
+              disabled={savingNotif}
+              className={`shrink-0 h-5 w-9 rounded-full relative cursor-pointer transition-colors disabled:opacity-60 ${value ? 'bg-violet-500/50 border border-violet-500/60' : 'bg-white/[0.08] border border-white/[0.10]'}`}
+            >
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full transition-transform ${value ? 'translate-x-4 bg-violet-300' : 'translate-x-0.5 bg-white/30'}`} />
+            </button>
           </div>
         ))}
       </div>

@@ -4,16 +4,22 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BarChart3, TrendingUp, Search, Loader2, Zap, Trash2 } from 'lucide-react'
 
-// Estimated monthly query volumes for common AI query patterns
+// Deterministic volume estimate based on keyword characteristics (no Math.random)
 function estimateVolume(keyword: string): { volume: number; trend: 'up' | 'flat' | 'down'; opportunity: number } {
   const lower = keyword.toLowerCase()
   const wordCount = lower.split(' ').length
-  // Rough heuristic — longer tail = lower volume, more opportunity
+  // Hash keyword to get stable pseudo-random number between 0 and 1
+  let hash = 0
+  for (let i = 0; i < lower.length; i++) {
+    hash = ((hash << 5) - hash) + lower.charCodeAt(i)
+    hash |= 0
+  }
+  const stableRand = Math.abs(hash % 100) / 100
   const base = wordCount <= 2 ? 50000 : wordCount <= 4 ? 12000 : 3000
   const trend = lower.includes('best') || lower.includes('top') || lower.includes('how') ? 'up' : 'flat'
-  const opportunity = Math.min(100, Math.round(100 - Math.random() * 40))
+  const opportunity = Math.min(98, Math.max(30, Math.round(55 + stableRand * 40)))
   return {
-    volume: Math.round(base * (0.5 + Math.random())),
+    volume: Math.round(base * (0.5 + stableRand * 0.9)),
     trend,
     opportunity,
   }
@@ -36,22 +42,24 @@ export default function VolumesPage() {
       const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
       setBrand(b)
       if (b) {
-        // Load from DB first
         const { data: pv } = await supabase.from('prompt_volumes').select('*').eq('brand_id', b.id).order('opportunity_score', { ascending: false })
         if (pv?.length) {
           setKeywords(pv)
         } else if (b.keywords?.length) {
-          // Generate estimates from brand keywords
           const estimates = b.keywords.map((kw: string) => {
             const { volume, trend, opportunity } = estimateVolume(kw)
             return { query: kw, estimated_volume: volume, opportunity_score: opportunity, trend, engines: ['chatgpt', 'perplexity', 'gemini'] }
           })
           setKeywords(estimates)
-          // Save to DB
-          await supabase.from('prompt_volumes').insert(estimates.map((e: any) => ({
-            brand_id: b.id, query: e.query, estimated_volume: e.estimated_volume,
-            opportunity_score: e.opportunity_score, engines: e.engines,
+          // Save to DB with brand_id always set
+          const { error: insertErr } = await supabase.from('prompt_volumes').insert(estimates.map((e: any) => ({
+            brand_id: b.id,
+            query: e.query,
+            estimated_volume: e.estimated_volume,
+            opportunity_score: e.opportunity_score,
+            engines: e.engines,
           })))
+          if (insertErr) console.error('prompt_volumes insert error:', insertErr)
         }
       }
       setLoading(false)
@@ -65,24 +73,23 @@ export default function VolumesPage() {
     setVolumeError('')
     const { volume, trend, opportunity } = estimateVolume(newKw.trim())
     const kw = { query: newKw.trim(), estimated_volume: volume, opportunity_score: opportunity, trend, engines: ['chatgpt', 'perplexity', 'gemini'] }
-    const { data, error } = await supabase.from('prompt_volumes').insert({ brand_id: brand.id, query: kw.query, estimated_volume: kw.estimated_volume, opportunity_score: kw.opportunity_score, engines: kw.engines }).select().single()
+    const { data, error } = await supabase.from('prompt_volumes').insert({
+      brand_id: brand.id,
+      query: kw.query,
+      estimated_volume: kw.estimated_volume,
+      opportunity_score: kw.opportunity_score,
+      engines: kw.engines,
+    }).select().single()
     if (error || !data) {
       setVolumeError('Failed to add keyword — please try again')
       setAdding(false)
       return
     }
     setKeywords(k => [{ ...kw, ...data }, ...k])
-    // Also save to brand.keywords so it shows in settings & scans
     const currentKws = brand.keywords || []
     if (!currentKws.includes(kw.query)) {
       const { error: brandErr } = await supabase.from('brands').update({ keywords: [...currentKws, kw.query] }).eq('id', brand.id)
-      if (!brandErr) {
-        setBrand((b: any) => ({ ...b, keywords: [...currentKws, kw.query] }))
-      }
-      // If this secondary sync fails, the keyword is still tracked for
-      // volume purposes (the insert above succeeded) - it just won't show
-      // up in Settings/scans until retried. Not worth blocking on or
-      // erroring loudly for, since the primary action did succeed.
+      if (!brandErr) setBrand((b: any) => ({ ...b, keywords: [...currentKws, kw.query] }))
     }
     setNewKw('')
     setAdding(false)
@@ -91,10 +98,7 @@ export default function VolumesPage() {
   const deleteKeyword = async (id: string) => {
     setVolumeError('')
     const { error } = await supabase.from('prompt_volumes').delete().eq('id', id)
-    if (error) {
-      setVolumeError('Failed to delete keyword — please try again')
-      return
-    }
+    if (error) { setVolumeError('Failed to delete keyword — please try again'); return }
     setKeywords(k => k.filter(x => x.id !== id))
   }
 
@@ -120,7 +124,6 @@ export default function VolumesPage() {
         </div>
       )}
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: 'Total monthly queries', value: keywords.length ? `~${(totalVolume / 1000).toFixed(0)}K` : '—', icon: Search },
@@ -134,7 +137,6 @@ export default function VolumesPage() {
         ))}
       </div>
 
-      {/* Add keyword */}
       {brand && (
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -149,6 +151,12 @@ export default function VolumesPage() {
             {adding ? <Loader2 size={14} className="animate-spin" /> : '+ Add'}
           </button>
         </div>
+      )}
+
+      {keywords.length > 1 && (
+        <input value={filter} onChange={e => setFilter(e.target.value)}
+          placeholder="Filter keywords..."
+          className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-violet-500/60" />
       )}
 
       {!brand ? (
@@ -214,7 +222,7 @@ export default function VolumesPage() {
 
       <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
         <p className="text-xs text-white/30 leading-relaxed">
-          <strong className="text-white/40">Note:</strong> Volume estimates are based on keyword length and pattern heuristics. Actual AI query volumes vary by engine. Use these as relative indicators for prioritizing your content strategy. Real-time volume data via BrightData integration coming soon.
+          <strong className="text-white/40">Note:</strong> Volume estimates are based on keyword length and pattern heuristics. Actual AI query volumes vary by engine. Use these as relative indicators for prioritizing your content strategy.
         </p>
       </div>
     </div>

@@ -70,6 +70,15 @@ export default async function ShareReportPage({ params }: { params: { slug: stri
 
   return (
     <div className="min-h-screen bg-[#08090A] text-white">
+      <style>{`
+        @media print {
+          body { background: white !important; color: black !important; }
+          .no-print { display: none !important; }
+          nav { border-bottom: 1px solid #eee !important; background: white !important; }
+          nav a, nav button { color: #333 !important; }
+          * { color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+      `}</style>
       {/* Header */}
       <div className="border-b border-white/[0.07] px-6 py-4 flex items-center justify-between">
         <Link href="/" className="text-lg font-black">Clouts<span className="text-violet-400">.</span></Link>
