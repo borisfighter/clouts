@@ -78,18 +78,39 @@ function SettingsInner() {
     setBrandActionError('')
     try {
       const { createClient } = await import('@/lib/supabase/client')
-      const supabase = createClient()
-      const { error: mentionsErr } = await supabase.from('mentions').delete().eq('brand_id', brandId)
+      const db = createClient()
+
+      // Delete in FK-safe order:
+      // 1. clip_publishes → clips (FK on clip_id)
+      // 2. agent_runs → agents (FK on agent_id)
+      // 3. agents → brands
+      // 4. mentions, prompt_volumes (direct FK on brand_id)
+      // 5. brand last
+
+      const { data: brandClips } = await db.from('clips').select('id').eq('brand_id', brandId)
+      const clipIds = (brandClips || []).map((c: any) => c.id)
+      if (clipIds.length > 0) {
+        await db.from('clip_publishes').delete().in('clip_id', clipIds)
+        const { error: clipsErr } = await db.from('clips').delete().eq('brand_id', brandId)
+        if (clipsErr) throw clipsErr
+      }
+
+      const { data: brandAgents } = await db.from('agents').select('id').eq('brand_id', brandId)
+      const agentIds = (brandAgents || []).map((a: any) => a.id)
+      if (agentIds.length > 0) {
+        await db.from('agent_runs').delete().in('agent_id', agentIds)
+        const { error: agentsErr } = await db.from('agents').delete().eq('brand_id', brandId)
+        if (agentsErr) throw agentsErr
+      }
+
+      const { error: mentionsErr } = await db.from('mentions').delete().eq('brand_id', brandId)
       if (mentionsErr) throw mentionsErr
-      const { error: brandErr } = await supabase.from('brands').delete().eq('id', brandId)
+      const { error: volumesErr } = await db.from('prompt_volumes').delete().eq('brand_id', brandId)
+      if (volumesErr) throw volumesErr
+
+      const { error: brandErr } = await db.from('brands').delete().eq('id', brandId)
       if (brandErr) throw brandErr
-      // Only redirect — implying success — once both deletes are confirmed.
-      // Previously this fired unconditionally right after two discarded
-      // .delete() calls: Supabase resolves with { error } rather than
-      // throwing on an RLS/permissions failure, so the try/catch here never
-      // caught it, and a user could click through this irreversible-sounding
-      // confirm dialog, land back on /dashboard, and have no idea the brand
-      // (and its data) might still fully exist.
+
       window.location.href = '/dashboard'
     } catch {
       setBrandActionError('Failed to delete brand — please try again. Nothing has been removed.')
@@ -307,7 +328,7 @@ function SettingsInner() {
       </form>
 
       {/* Share report */}
-      {brandId && shareSlug && (
+      {brandId && shareSlug && !isNew && (
         <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-3">
           <h2 className="text-sm font-bold text-white">Share Report</h2>
           <p className="text-xs text-white/40">Share a public AI visibility report for {name} with stakeholders, clients, or investors. No login required.</p>
@@ -371,7 +392,7 @@ function SettingsInner() {
       </div>
 
       {/* Scan schedule */}
-      {brandId && (
+      {brandId && !isNew && (
         <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 space-y-4">
           <h2 className="text-sm font-bold text-white">Automated scans</h2>
           <div className="flex items-center justify-between gap-4">

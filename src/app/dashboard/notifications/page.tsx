@@ -31,7 +31,13 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true)
   const [brand, setBrand] = useState<any>(null)
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const [readIds, setReadIds] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set<string>()
+    try {
+      const stored = localStorage.getItem('clouts_read_notifs')
+      return stored ? new Set(JSON.parse(stored)) : new Set<string>()
+    } catch { return new Set<string>() }
+  })
 
   useEffect(() => {
     async function load() {
@@ -115,7 +121,12 @@ export default function NotificationsPage() {
   }, [])
 
   const unread = notifications.filter(n => !readIds.has(n.id)).length
-  const markAllRead = () => setReadIds(new Set(notifications.map(n => n.id)))
+  const markAllRead = () => {
+    const allIds = notifications.map(n => n.id)
+    const next = new Set(allIds)
+    setReadIds(next)
+    try { localStorage.setItem('clouts_read_notifs', JSON.stringify(allIds)) } catch {}
+  }
 
   if (loading) return <div className="flex h-48 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/20" /></div>
 
@@ -149,7 +160,14 @@ export default function NotificationsPage() {
             return (
               <div
                 key={id}
-                onClick={() => setReadIds(prev => new Set(prev).add(id))}
+                onClick={() => {
+                  setReadIds(prev => {
+                    const next = new Set(prev)
+                    next.add(id)
+                    try { localStorage.setItem('clouts_read_notifs', JSON.stringify(Array.from(next))) } catch {}
+                    return next
+                  })
+                }}
                 className={`flex items-start gap-4 rounded-2xl border p-5 cursor-pointer transition-all ${
                   read ? 'border-white/[0.07] bg-white/[0.02] opacity-60' : 'border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.06]'
                 }`}

@@ -29,12 +29,16 @@ export default function PublishQueuePage() {
       if (!user) return setLoading(false)
       const { data: b } = await supabase.from('brands').select('id').eq('user_id', user.id).eq('is_default', true).single()
       if (b) {
-        const [{ data: c }, { data: q }] = await Promise.all([
-          supabase.from('clips').select('*').eq('brand_id', b.id).order('created_at', { ascending: false }),
-          supabase.from('clip_publishes').select('*, clips(title)').eq('clips.brand_id', b.id).order('created_at', { ascending: false }).limit(20),
-        ])
+        const { data: c } = await supabase.from('clips').select('*').eq('brand_id', b.id).order('created_at', { ascending: false })
         setClips(c || [])
-        setQueued(q || [])
+        // clip_publishes must be scoped via clip IDs — related table filters don't work in Supabase JS client
+        const clipIds = (c || []).map((clip: any) => clip.id)
+        if (clipIds.length > 0) {
+          const { data: q } = await supabase.from('clip_publishes')
+            .select('*, clips(title, status)').in('clip_id', clipIds)
+            .order('created_at', { ascending: false }).limit(20)
+          setQueued(q || [])
+        }
       }
       setLoading(false)
     }

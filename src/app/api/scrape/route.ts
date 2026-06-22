@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/email/scan-complete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: user.email, brandName: brand.name, mentionRate, totalScans: results.length }),
+      body: JSON.stringify({ email: user.email, brandName: brand.name, mentionRate, totalScans: results.length, userId: user.id }),
     }).catch(() => {}) // non-blocking
   }
 

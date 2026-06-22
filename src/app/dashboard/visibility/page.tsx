@@ -42,20 +42,27 @@ export default function VisibilityPage() {
     setMentions(data || [])
   }
 
+  // Load brand + plan once on mount
   useEffect(() => {
-    async function load() {
+    async function loadBrand() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return setLoading(false)
+      if (!user) { setLoading(false); return }
       const [{ data: b }, { data: u }] = await Promise.all([
         supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single(),
         supabase.from('users').select('plan').eq('id', user.id).single(),
       ])
-      setBrand(b); if (u) setUserPlan(u.plan || 'free')
-      if (b) await loadData(b.id)
+      setBrand(b)
+      if (u) setUserPlan(u.plan || 'free')
       setLoading(false)
     }
-    load()
-  }, [range])
+    loadBrand()
+  }, [])
+
+  // Reload mention data when brand or range changes
+  useEffect(() => {
+    if (!brand) return
+    loadData(brand.id)
+  }, [brand, range])
 
   const runScan = async () => {
     if (!brand) return
