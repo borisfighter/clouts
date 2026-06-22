@@ -11,6 +11,9 @@ import Link from 'next/link'
 const ENGINE_COLORS: Record<string, string> = {
   perplexity: '#8b5cf6', chatgpt: '#10b981', gemini: '#3b82f6', grok: '#f59e0b', claude: '#ec4899',
 }
+const ENGINE_DISPLAY: Record<string, string> = {
+  perplexity: 'Perplexity', chatgpt: 'ChatGPT', gemini: 'Gemini', grok: 'Grok', claude: 'Claude',
+}
 
 function DashboardPageInner() {
   const supabase = createClient()
@@ -243,7 +246,7 @@ function DashboardPageInner() {
                   {engineStats.map(({ engine, total, mentioned, rate }) => (
                     <div key={engine} className="flex items-center gap-3">
                       <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: ENGINE_COLORS[engine] || '#666', opacity: 0.8 }} />
-                      <span className="text-xs text-white/60 capitalize w-20">{engine}</span>
+                      <span className="text-xs text-white/60 w-20">{ENGINE_DISPLAY[engine] || engine}</span>
                       <div className="flex-1 h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
                         <div className="h-full rounded-full transition-all" style={{ width: `${rate}%`, background: ENGINE_COLORS[engine] || '#8b5cf6', opacity: 0.7 }} />
                       </div>
@@ -267,7 +270,7 @@ function DashboardPageInner() {
                 {recentMentions.slice(0, 6).map((m, i) => (
                   <div key={i} className="flex items-center gap-3 px-5 py-2.5">
                     <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: ENGINE_COLORS[m.engine] || '#666' }} />
-                    <span className="text-[10px] font-semibold capitalize shrink-0" style={{ color: ENGINE_COLORS[m.engine] || '#fff', opacity: 0.8, minWidth: 60 }}>{m.engine}</span>
+                    <span className="text-[10px] font-semibold shrink-0" style={{ color: ENGINE_COLORS[m.engine] || '#fff', opacity: 0.8, minWidth: 60 }}>{ENGINE_DISPLAY[m.engine] || m.engine}</span>
                     <p className="flex-1 text-xs text-white/40 truncate">{m.prompt}</p>
                     {m.mentioned
                       ? <span className="text-[10px] text-emerald-400 shrink-0">✓</span>

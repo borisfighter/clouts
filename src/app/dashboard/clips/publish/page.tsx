@@ -5,6 +5,10 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, Send, Check, Scissors, ExternalLink } from 'lucide-react'
 
+const STATUS_LABEL: Record<string, string> = {
+  ready: 'Ready', processing: 'Processing', awaiting_upload: 'Awaiting upload', failed: 'Failed',
+}
+
 const PLATFORMS = [
   { id: 'tiktok',    label: 'TikTok',          icon: '📱', desc: 'Short-form video, up to 10 min', color: 'border-pink-500/20 hover:border-pink-500/40 hover:bg-pink-500/[0.04]' },
   { id: 'instagram', label: 'Instagram Reels',  icon: '📸', desc: 'Up to 90 seconds, vertical', color: 'border-violet-500/20 hover:border-violet-500/40 hover:bg-violet-500/[0.04]' },

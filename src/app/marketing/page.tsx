@@ -7,7 +7,7 @@ const FEATURES = [
   {
     icon: Radio,
     title: 'Real-Time AI Mention Tracking',
-    desc: 'Monitor your brand across 9 AI engines simultaneously. Know exactly when ChatGPT, Perplexity, or Gemini recommends — or ignores — your product.',
+    desc: 'Monitor your brand across 5 AI engines simultaneously. Know exactly when ChatGPT, Perplexity, or Gemini recommends — or ignores — your product.',
     color: 'text-violet-400',
     bg: 'bg-violet-500/10 border-violet-500/20',
   },
@@ -133,7 +133,7 @@ export default function MarketingPage() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-lg md:text-xl text-white/50 mb-10 leading-relaxed">
-            Monitor your brand across 9 AI engines. Get AI-powered optimization recommendations.
+            Monitor your brand across 5 AI engines. Get AI-powered optimization recommendations.
             Auto-clip your best brand moments into viral content.
           </p>
 
@@ -146,7 +146,7 @@ export default function MarketingPage() {
               See live demo <ChevronRight size={14} />
             </Link>
           </div>
-          <p className="text-xs text-white/20">Free forever · No credit card · Live in 2 minutes</p>
+          <p className="text-xs text-white/20">3-day free trial · Card verified, not charged · Cancel anytime</p>
         </div>
       </section>
 
@@ -332,7 +332,7 @@ export default function MarketingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { step: '01', title: 'Add your brand', desc: 'Enter your domain and the keywords your customers type into AI engines.', icon: Globe },
-              { step: '02', title: 'Run first scan', desc: 'Clouts queries all 9 AI engines and scores your visibility instantly.', icon: Radio },
+              { step: '02', title: 'Run first scan', desc: 'Clouts queries all 5 AI engines and scores your visibility instantly.', icon: Radio },
               { step: '03', title: 'Optimize & grow', desc: 'Follow AEO recommendations to create content that gets your brand cited.', icon: TrendingUp },
             ].map(({ step, title, desc, icon: Icon }) => (
               <div key={step} className="relative">

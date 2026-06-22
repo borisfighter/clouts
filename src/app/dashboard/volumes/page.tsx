@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BarChart3, TrendingUp, Search, Loader2, Zap, Trash2 } from 'lucide-react'
 
+const ENGINE_DISPLAY: Record<string, string> = {
+  chatgpt: 'ChatGPT', perplexity: 'Perplexity', gemini: 'Gemini', grok: 'Grok', claude: 'Claude',
+}
+
 // Deterministic volume estimate based on keyword characteristics (no Math.random)
 function estimateVolume(keyword: string): { volume: number; trend: 'up' | 'flat' | 'down'; opportunity: number } {
   const lower = keyword.toLowerCase()
@@ -186,7 +190,7 @@ export default function VolumesPage() {
                   <p className="text-sm text-white/80 truncate">{kw.query}</p>
                   <div className="flex gap-1 mt-1">
                     {(kw.engines || []).slice(0, 3).map((e: string) => (
-                      <span key={e} className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[9px] text-white/30 capitalize">{e}</span>
+                      <span key={e} className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[9px] text-white/30">{ENGINE_DISPLAY[e] || e}</span>
                     ))}
                   </div>
                 </div>

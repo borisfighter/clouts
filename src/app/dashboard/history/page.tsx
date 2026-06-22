@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, Radio, Calendar } from 'lucide-react'
 
+const ENGINE_DISPLAY: Record<string, string> = {
+  perplexity: 'Perplexity', chatgpt: 'ChatGPT', gemini: 'Gemini', grok: 'Grok', claude: 'Claude',
+}
+
 const ENGINE_COLORS: Record<string, string> = {
   perplexity: '#8b5cf6', chatgpt: '#10b981', gemini: '#3b82f6', grok: '#f59e0b', claude: '#ec4899',
 }
