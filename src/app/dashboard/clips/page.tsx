@@ -10,6 +10,10 @@ interface Clip {
   duration_sec: number | null; created_at: string; views: number
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  ready: 'Ready', processing: 'Processing', awaiting_upload: 'Awaiting upload', failed: 'Failed',
+}
+
 const STATUS_COLOR: Record<string, string> = {
   ready:          'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
   processing:     'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
@@ -216,7 +220,7 @@ export default function ClipsPage() {
                 </div>
                 <div className="absolute top-2 right-2">
                   <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLOR[clip.status] || 'text-white/30 bg-white/[0.04] border-white/[0.06]'}`}>
-                    {clip.status}
+                    {STATUS_LABEL[clip.status] || clip.status}
                   </span>
                 </div>
                 {clip.duration_sec && (
@@ -230,12 +234,12 @@ export default function ClipsPage() {
                 <p className="text-xs text-white/30">{new Date(clip.created_at).toLocaleDateString()}{clip.views > 0 ? ` · ${clip.views} views` : ''}</p>
                 <div className="mt-3 flex gap-1">
                   {clip.mux_playback_id && (
-                    <a href={`https://stream.mux.com/${clip.mux_playback_id}.m3u8`} target="_blank" rel="noopener"
+                    <a href={`https://stream.mux.com/${clip.mux_playback_id}`} target="_blank" rel="noopener"
                       className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-white/[0.07] py-1.5 text-[11px] text-white/30 hover:text-white hover:border-white/20 transition-colors">
                       <ExternalLink size={10} /> View
                     </a>
                   )}
-                  <a href={`/dashboard/clips/publish`}
+                  <a href={`/dashboard/clips/publish?clipId=${clip.id}`}
                     className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-white/[0.07] py-1.5 text-[11px] text-white/30 hover:text-emerald-400 hover:border-emerald-400/20 transition-colors">
                     Publish
                   </a>

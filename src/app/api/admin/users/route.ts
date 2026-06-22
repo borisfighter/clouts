@@ -60,6 +60,28 @@ export async function DELETE(req: NextRequest) {
   const { userId } = await req.json()
   if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
+  // Cascade in FK-safe order before removing user
+  const { data: userBrands } = await db.from('brands').select('id').eq('user_id', userId)
+  const brandIds = (userBrands || []).map((b: any) => b.id)
+
+  if (brandIds.length > 0) {
+    const { data: brandClips } = await db.from('clips').select('id').in('brand_id', brandIds)
+    const clipIds = (brandClips || []).map((c: any) => c.id)
+    if (clipIds.length > 0) {
+      await db.from('clip_publishes').delete().in('clip_id', clipIds)
+      await db.from('clips').delete().in('brand_id', brandIds)
+    }
+    const { data: brandAgents } = await db.from('agents').select('id').in('brand_id', brandIds)
+    const agentIds = (brandAgents || []).map((a: any) => a.id)
+    if (agentIds.length > 0) {
+      await db.from('agent_runs').delete().in('agent_id', agentIds)
+      await db.from('agents').delete().in('brand_id', brandIds)
+    }
+    await db.from('mentions').delete().in('brand_id', brandIds)
+    await db.from('prompt_volumes').delete().in('brand_id', brandIds)
+    await db.from('brands').delete().eq('user_id', userId)
+  }
+
   await db.from('users').delete().eq('id', userId)
   try { await db.auth.admin.deleteUser(userId) } catch {}
   return NextResponse.json({ ok: true })

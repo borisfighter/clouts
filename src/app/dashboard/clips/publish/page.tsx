@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2, Send, Check, Scissors, ExternalLink } from 'lucide-react'
 
@@ -14,6 +15,7 @@ const PLATFORMS = [
 
 export default function PublishQueuePage() {
   const supabase = createClient()
+  const searchParams = useSearchParams()
   const [clips, setClips] = useState<any[]>([])
   const [queued, setQueued] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,6 +33,11 @@ export default function PublishQueuePage() {
       if (b) {
         const { data: c } = await supabase.from('clips').select('*').eq('brand_id', b.id).order('created_at', { ascending: false })
         setClips(c || [])
+        // Auto-select clip from query param (?clipId=...)
+        const preselect = searchParams.get('clipId')
+        if (preselect && (c || []).find((clip: any) => clip.id === preselect)) {
+          setSelectedClip(preselect)
+        }
         // clip_publishes must be scoped via clip IDs — related table filters don't work in Supabase JS client
         const clipIds = (c || []).map((clip: any) => clip.id)
         if (clipIds.length > 0) {

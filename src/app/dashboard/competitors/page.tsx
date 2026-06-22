@@ -16,6 +16,7 @@ export default function CompetitorsPage() {
   const [saveError, setSaveError] = useState('')
   const [scanError, setScanError] = useState('')
   const [mentions, setMentions] = useState<any[]>([])
+  const [userPlan, setUserPlan] = useState('free')
 
   async function loadMentions(brandId: string) {
     const since = new Date(Date.now() - 30 * 86400000).toISOString()
@@ -27,8 +28,12 @@ export default function CompetitorsPage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return setLoading(false)
-      const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single()
+      const [{ data: b }, { data: u }] = await Promise.all([
+        supabase.from('brands').select('*').eq('user_id', user.id).eq('is_default', true).single(),
+        supabase.from('users').select('plan').eq('id', user.id).single(),
+      ])
       setBrand(b)
+      if (u) setUserPlan(u.plan || 'free')
       if (b) await loadMentions(b.id)
       setLoading(false)
     }
@@ -71,7 +76,7 @@ export default function CompetitorsPage() {
     try {
       const res = await fetch('/api/scrape', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brandId: brand.id, engines: ['perplexity'] }),
+        body: JSON.stringify({ brandId: brand.id, engines: userPlan === 'free' ? ['perplexity'] : ['perplexity', 'chatgpt', 'gemini', 'grok', 'claude'] }),
       })
       const data = await res.json()
       if (!res.ok || data.error) {

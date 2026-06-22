@@ -29,6 +29,7 @@ export default function VisibilityPage() {
   const [scraping, setScraping] = useState(false)
   const [scanStatus, setScanStatus] = useState<{ msg: string; type: 'info' | 'success' | 'error' } | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
+  const [dataLoading, setDataLoading] = useState(false)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [range, setRange] = useState<'7d' | '30d' | 'all'>('30d')
 
@@ -61,7 +62,8 @@ export default function VisibilityPage() {
   // Reload mention data when brand or range changes
   useEffect(() => {
     if (!brand) return
-    loadData(brand.id)
+    setDataLoading(true)
+    loadData(brand.id).finally(() => setDataLoading(false))
   }, [brand, range])
 
   const runScan = async () => {
@@ -76,7 +78,7 @@ export default function VisibilityPage() {
         body: JSON.stringify({ brandId: brand.id, engines }),
       })
       const data = await res.json()
-      if (data.error) { setScanStatus({ msg: `Error: ${data.error}`, type: 'error' }); return }
+      if (data.error) { setScanStatus({ msg: data.error, type: 'error' }); return }
       let msg = `✓ Scanned ${data.scraped} queries — ${data.mentioned} mentions (${data.mentionRate}% rate)`
       if (data.competitorStats && Object.keys(data.competitorStats).length > 0) {
         const compSummary = Object.entries(data.competitorStats as Record<string,number>)
