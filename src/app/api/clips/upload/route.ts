@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   if (!isUnlimited(plan.limits.clips)) {
     if (plan.limits.clips === 0) {
       return NextResponse.json({
-        error: `Clips are not available on the ${plan.name} plan. Upgrade to Pro to create clips.`,
+        error: `Clips are not available on the ${plan.name} plan. Upgrade to Growth or Enterprise to create clips.`,
       }, { status: 403 })
     }
     const since = new Date()

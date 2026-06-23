@@ -411,7 +411,7 @@ function SettingsInner() {
         {userPlan === 'free' && (
           <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.06] p-4">
             <p className="text-xs font-semibold text-violet-300 mb-1">Unlock all 5 AI engines</p>
-            <p className="text-xs text-white/40">Upgrade to Pro to scan ChatGPT, Gemini, Claude, and Grok — not just Perplexity.</p>
+            <p className="text-xs text-white/40">Upgrade to Starter or above to scan ChatGPT, Gemini, Claude, and Grok — not just Perplexity.</p>
           </div>
         )}
       </div>

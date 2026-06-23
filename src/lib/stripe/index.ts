@@ -27,7 +27,7 @@ export const PLANS = {
     priceMonthly: process.env.STRIPE_PRICE_PRO_MONTHLY || '',
     priceYearly: process.env.STRIPE_PRICE_PRO_YEARLY || '',
     limits: { brands: 5, mentionsPerMonth: 10000, clips: 50, agents: 3 },
-    features: ['5 brands', '10K AI mentions/mo', 'All 8 AI engines', '50 clips/mo', '3 agents', 'Priority support'],
+    features: ['5 brands', '10K AI mentions/mo', 'All 5 AI engines', '50 clips/mo', '3 agents', 'Priority support'],
   },
   team: {
     name: 'Team',
@@ -35,7 +35,7 @@ export const PLANS = {
     priceMonthly: process.env.STRIPE_PRICE_TEAM_MONTHLY || '',
     priceYearly: process.env.STRIPE_PRICE_TEAM_YEARLY || '',
     limits: { brands: -1, mentionsPerMonth: -1, clips: -1, agents: -1 },
-    features: ['Unlimited brands', 'Unlimited mentions', 'All engines + AI Overview', 'Unlimited clips', 'Unlimited agents', 'Dedicated support', 'Custom integrations'],
+    features: ['Unlimited brands', 'Unlimited mentions', 'All 5 AI engines', 'Unlimited clips', 'Unlimited agents', 'Dedicated support', 'Custom integrations'],
   },
   // growth/enterprise power the /pricing page's tier cards specifically.
   // pro/team above remain the tiers actually enforced across the dashboard
@@ -48,8 +48,8 @@ export const PLANS = {
     priceMonthly: process.env.STRIPE_PRICE_GROWTH_MONTHLY || '',
     priceYearly: process.env.STRIPE_PRICE_GROWTH_YEARLY || '',
     trialDays: 3,
-    limits: { brands: 5, mentionsPerMonth: 10000, clips: 0, agents: 6 },
-    features: ['ChatGPT, Perplexity, Google AI Overviews', 'Up to 250 tracked prompts', '5 seats', 'Sentiment + competitor tracking', 'AEO agent — 6 content pieces/mo', 'Priority support'],
+    limits: { brands: 5, mentionsPerMonth: 10000, clips: 20, agents: 6 },
+    features: ['ChatGPT, Perplexity, Gemini, Grok + Claude', 'Up to 250 tracked prompts', '5 seats', 'Sentiment + competitor tracking', 'AEO agent — 6 content pieces/mo', 'Priority support'],
   },
   enterprise: {
     name: 'Enterprise',
