@@ -101,7 +101,8 @@ export const weeklyReport = inngest.createFunction(
       const email = (b.users as any)?.email
       if (!email) continue
       await step.run(`send-report-${b.id}`, async () => {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/email/weekly-report`, {
+        const appUrl2 = process.env.NEXT_PUBLIC_APP_URL || 'https://www.clouts.com'
+        const res = await fetch(`${appUrl2}/api/email/weekly-report`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',

@@ -48,6 +48,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     async function load() {
@@ -65,6 +66,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (u) setPlan(u.plan || 'free')
     }
     load()
+  }, [pathname])
+
+  // Unread notification count from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('clouts_read_notifs')
+      const readIds: string[] = stored ? JSON.parse(stored) : []
+      const possible = ['latest-scan', 'week-trend', 'agent-run']
+      setUnreadCount(possible.filter(id => !readIds.includes(id)).length)
+    } catch { setUnreadCount(0) }
   }, [pathname])
 
   // Close brand menu when clicking outside

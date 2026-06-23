@@ -74,8 +74,9 @@ export async function POST(req: NextRequest) {
   const mentionRate = results.length > 0 ? Math.round((mentioned / results.length) * 100) : 0
 
   // Fire-and-forget: send scan complete email (non-blocking)
-  if (process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.includes('REPLACE')) {
-    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/email/scan-complete`, {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (appUrl && process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.includes('REPLACE')) {
+    fetch(`${appUrl}/api/email/scan-complete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user.email, brandName: brand.name, mentionRate, totalScans: results.length, userId: user.id }),

@@ -39,8 +39,13 @@ export async function POST(req: NextRequest) {
   const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
   const share_slug = slugBase + '-' + Math.random().toString(36).slice(2, 10)
 
+  // Set is_default=true only when this is the user's first brand
+  const { count: existingCount } = await supabase
+    .from('brands').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+  const isFirst = (existingCount || 0) === 0
+
   const { data, error } = await supabase.from('brands').insert({
-    user_id: user.id, name, domain, keywords, competitors, is_default: false, share_slug,
+    user_id: user.id, name, domain, keywords, competitors, is_default: isFirst, share_slug,
   }).select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
