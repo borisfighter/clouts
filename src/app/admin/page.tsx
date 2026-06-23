@@ -32,7 +32,8 @@ export default function AdminOverviewPage() {
     { label: 'Total brands',    value: brands.total,      sub: 'across all users',              icon: Globe,    color: 'text-violet-400', link: '/admin/brands' },
     { label: 'Mentions (7d)',   value: mentions.last7,    sub: `${(mentions.total||0).toLocaleString()} total`,      icon: Radio,    color: 'text-pink-400',   link: '/admin/mentions' },
     { label: 'Total clips',     value: clips.total,       sub: 'all time',                      icon: Scissors, color: 'text-yellow-400', link: '/admin/clips' },
-    { label: 'Pro users',       value: plans.pro || 0,    sub: `${plans.team || 0} team`,       icon: Crown,    color: 'text-violet-400', link: '/admin/users?plan=pro' },
+    { label: 'Paid users', value: (plans.starter || 0) + (plans.growth || 0) + (plans.pro || 0) + (plans.team || 0) + (plans.enterprise || 0),
+      sub: `${plans.free || 0} free`, icon: Crown, color: 'text-violet-400', link: '/admin/users' },
   ]
 
   return (
@@ -74,11 +75,12 @@ export default function AdminOverviewPage() {
         <h2 className="text-sm font-bold text-white mb-4">Plan distribution</h2>
         <div className="flex gap-3">
           {[
-            { key: 'free', label: 'Free', color: 'bg-white/20', textColor: 'text-white/60' },
-            { key: 'pro',  label: 'Pro',  color: 'bg-violet-500', textColor: 'text-violet-300' },
-            { key: 'team', label: 'Team', color: 'bg-emerald-500', textColor: 'text-emerald-300' },
+            { key: 'free',       label: 'Free',       color: 'bg-white/20',    textColor: 'text-white/60' },
+            { key: 'starter',    label: 'Starter',    color: 'bg-blue-500',    textColor: 'text-blue-300' },
+            { key: 'growth',     label: 'Growth',     color: 'bg-violet-500',  textColor: 'text-violet-300' },
+            { key: 'enterprise', label: 'Enterprise', color: 'bg-emerald-500', textColor: 'text-emerald-300' },
           ].map(({ key, label, color, textColor }) => {
-            const count = plans[key] || 0
+            const count = key === 'free' ? (plans.free || 0) : key === 'growth' ? ((plans.growth || 0) + (plans.pro || 0)) : key === 'enterprise' ? ((plans.enterprise || 0) + (plans.team || 0)) : (plans[key] || 0)
             const total = users.total || 1
             const pct = Math.round((count / total) * 100)
             return (
@@ -92,11 +94,12 @@ export default function AdminOverviewPage() {
         </div>
         <div className="mt-4 h-2 rounded-full bg-white/[0.05] overflow-hidden flex">
           {[
-            { key: 'free', color: 'bg-white/20' },
-            { key: 'pro',  color: 'bg-violet-500/70' },
-            { key: 'team', color: 'bg-emerald-500/70' },
+            { key: 'free',       color: 'bg-white/20' },
+            { key: 'starter',    color: 'bg-blue-500/70' },
+            { key: 'growth',     color: 'bg-violet-500/70' },
+            { key: 'enterprise', color: 'bg-emerald-500/70' },
           ].map(({ key, color }) => {
-            const count = plans[key] || 0
+            const count = key === 'free' ? (plans.free || 0) : key === 'growth' ? ((plans.growth || 0) + (plans.pro || 0)) : key === 'enterprise' ? ((plans.enterprise || 0) + (plans.team || 0)) : (plans[key] || 0)
             const pct = Math.round((count / (users.total || 1)) * 100)
             return <div key={key} className={`h-full ${color} transition-all`} style={{ width: `${pct}%` }} />
           })}
@@ -121,8 +124,9 @@ export default function AdminOverviewPage() {
                   <p className="text-[10px] text-white/20">{new Date(u.created_at).toLocaleDateString()}</p>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${
-                  u.plan === 'pro' ? 'text-violet-400 bg-violet-400/10 border-violet-400/20' :
-                  u.plan === 'team' ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' :
+                  u.plan === 'enterprise' || u.plan === 'team' ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' :
+                  u.plan === 'growth' || u.plan === 'pro' ? 'text-violet-400 bg-violet-400/10 border-violet-400/20' :
+                  u.plan === 'starter' ? 'text-blue-400 bg-blue-400/10 border-blue-400/20' :
                   'text-white/30 bg-white/[0.04] border-white/[0.08]'
                 }`}>{u.plan || 'free'}</span>
               </div>

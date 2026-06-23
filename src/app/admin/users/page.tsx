@@ -4,7 +4,14 @@ import { Search, ChevronLeft, ChevronRight, Trash2, Edit2, X, Loader2 } from 'lu
 import { useRef } from 'react'
 
 const PLANS = ['free', 'pro', 'team']
-const planBadge = (p: string) => ({ pro: 'text-violet-400 bg-violet-400/10 border-violet-400/20', team: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20', free: 'text-white/30 bg-white/[0.04] border-white/[0.08]' }[p] || 'text-white/30 bg-white/[0.04] border-white/[0.08]')
+const planBadge = (p: string) => ({
+  enterprise: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+  team:       'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+  growth:     'text-violet-400 bg-violet-400/10 border-violet-400/20',
+  pro:        'text-violet-400 bg-violet-400/10 border-violet-400/20',
+  starter:    'text-blue-400 bg-blue-400/10 border-blue-400/20',
+  free:       'text-white/30 bg-white/[0.04] border-white/[0.08]',
+}[p] || 'text-white/30 bg-white/[0.04] border-white/[0.08]')
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([])
