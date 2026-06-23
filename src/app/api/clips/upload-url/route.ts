@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   })
 
   const { data: clip, error: clipErr } = await supabase.from('clips').insert({
-    brand_id: brandId, title, status: 'awaiting_upload',
+    brand_id: brandId, title, status: 'awaiting_upload', mux_upload_id: upload.id,
   }).select().single()
 
   if (clipErr || !clip) {
