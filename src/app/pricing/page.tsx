@@ -30,7 +30,7 @@ const TIERS = [
     highlight: true,
     badge: 'Most popular',
     features: [
-      'ChatGPT, Perplexity, Google AI Overviews',
+      'ChatGPT, Perplexity, Gemini, Grok + Claude',
       'Up to 250 tracked prompts',
       '5 seats',
       'Sentiment + competitor tracking',
@@ -174,10 +174,10 @@ export default function PricingPage() {
                     ? 'bg-violet-600 text-white hover:bg-violet-500'
                     : 'border border-white/[0.10] text-white hover:border-white/20'
                 } disabled:opacity-60`}>
-                {loading === tier.key ? 'Starting trial...' : 'Start free trial'}
+                {loading === tier.key ? 'Loading...' : tier.key === 'enterprise' ? 'Contact sales' : 'Start free trial'}
                 {loading !== tier.key && <ArrowRight size={14} />}
               </button>
-              <p className="mt-2 text-center text-[11px] text-white/25">3 days free, then {tier.price}{tier.period}</p>
+              <p className="mt-2 text-center text-[11px] text-white/25">{tier.key === 'enterprise' ? 'Contact us for pricing' : `3 days free, then ${tier.price}${tier.period}`}</p>
             </div>
           ))}
         </div>
