@@ -22,7 +22,7 @@ const RELEASES = [
       'Auto Clips — create and publish video clips from brand moments',
       'Admin panel with integration status dashboard (15 API keys)',
       'Hourly background scans via Inngest (Pro/Team plans)',
-      'Stripe billing with Free / Pro ($79) / Team ($299) plans',
+      'Stripe billing with Free / Starter ($99) / Growth ($399) / Enterprise plans',
     ],
   },
   {

@@ -36,7 +36,7 @@ export default function AgenciesPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <Link href="/auth/signup"
               className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500 transition-colors">
-              Start free — no credit card →
+              Start free — 3-day trial →
             </Link>
             <Link href="/pricing" className="text-sm text-white/40 hover:text-white transition-colors">
               View Team plan →

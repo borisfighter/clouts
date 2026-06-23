@@ -150,7 +150,7 @@ export default function VolumesPage() {
               placeholder="Add a keyword to track volume..."
               className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-9 pr-4 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-violet-500/60" />
           </div>
-          <button onClick={addKeyword} disabled={!newKw.trim() || adding}
+          <button onMouseDown={e => { e.preventDefault(); addKeyword() }} disabled={!newKw.trim() || adding}
             className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-40 transition-colors">
             {adding ? <Loader2 size={14} className="animate-spin" /> : '+ Add'}
           </button>

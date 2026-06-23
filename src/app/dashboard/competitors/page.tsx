@@ -159,7 +159,7 @@ export default function CompetitorsPage() {
                 </span>
               ))}
             </div>
-            <button onClick={saveCompetitors} disabled={saving}
+            <button onMouseDown={e => { e.preventDefault(); saveCompetitors() }} disabled={saving}
               className="flex items-center gap-1.5 text-xs font-medium text-violet-400 hover:text-violet-300 disabled:opacity-40">
               {saving ? <Loader2 size={11} className="animate-spin" /> : saved ? <Check size={11} /> : null}
               {saved ? 'Saved!' : 'Save competitors'}
