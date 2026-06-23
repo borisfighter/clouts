@@ -17,7 +17,7 @@ const POSTS = [
     tagColor: 'bg-violet-500/20 text-violet-300',
   },
   {
-    slug: '/pricing',  // Full comparison on pricing page
+    slug: '/blog/ai-visibility-tools-compared',
     title: 'AI Visibility Tools Compared: Clouts vs Profound vs Visiblie',
     excerpt: 'An honest comparison of the top AI visibility monitoring platforms in 2026 — features, pricing, and what actually matters for growing brands.',
     date: 'June 2026',

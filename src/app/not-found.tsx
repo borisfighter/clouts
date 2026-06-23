@@ -12,7 +12,7 @@ export default function NotFound() {
         <div className="flex flex-col gap-2 mb-8">
           {[
             { href: '/dashboard',  label: '→ Dashboard', sub: 'View your AI visibility data' },
-            { href: '/pricing',    label: '→ Pricing',   sub: 'Free, Pro, and Team plans' },
+            { href: '/pricing',    label: '→ Pricing',   sub: 'Starter, Growth, and Enterprise plans' },
             { href: '/changelog',  label: '→ Changelog', sub: "What's new in Clouts" },
             { href: '/auth/login', label: '→ Log in',    sub: 'Sign in to your account' },
           ].map(({ href, label, sub }) => (
