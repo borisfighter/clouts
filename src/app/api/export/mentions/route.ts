@@ -20,10 +20,11 @@ export async function GET(req: NextRequest) {
     .eq('brand_id', brandId!).gte('scraped_at', since)
     .order('scraped_at', { ascending: false }).limit(10000)
 
+  const ENGINE_LABELS: Record<string,string> = { chatgpt:'ChatGPT', perplexity:'Perplexity', gemini:'Gemini', grok:'Grok', claude:'Claude' }
   const header = ['Date', 'Engine', 'Query', 'Mentioned', 'Sentiment', 'Score', 'Position', 'Cited URL']
   const rows = (mentions || []).map(m => [
     new Date(m.scraped_at).toISOString().slice(0, 10),
-    m.engine,
+    ENGINE_LABELS[m.engine] || m.engine,
     `"${(m.prompt || '').replace(/"/g, '""')}"`,
     m.mentioned ? 'Yes' : 'No',
     m.sentiment || '',

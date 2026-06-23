@@ -167,7 +167,15 @@ export default function AnalyticsPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-4 mt-3">
+              {/* X-axis date labels */}
+              {days.length > 0 && (
+                <div className="flex justify-between mt-1 px-0.5">
+                  <span className="text-[9px] text-white/20">{days[0][0].slice(5)}</span>
+                  {days.length > 2 && <span className="text-[9px] text-white/20">{days[Math.floor(days.length / 2)][0].slice(5)}</span>}
+                  {days.length > 1 && <span className="text-[9px] text-white/20">{days[days.length - 1][0].slice(5)}</span>}
+                </div>
+              )}
+              <div className="flex items-center gap-4 mt-2">
                 <div className="flex items-center gap-1.5"><div className="h-2 w-3 rounded bg-violet-500/60" /><span className="text-[10px] text-white/30">Mentioned</span></div>
                 <div className="flex items-center gap-1.5"><div className="h-2 w-3 rounded bg-white/[0.07]" /><span className="text-[10px] text-white/30">Total queries</span></div>
               </div>
@@ -183,7 +191,7 @@ export default function AnalyticsPage() {
               {byEngine.map(({ engine, total, mentioned, rate, avgScore }) => (
                 <div key={engine} className="flex items-center gap-4 px-5 py-3.5">
                   <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: ENGINE_COLORS[engine] || '#666', opacity: 0.8 }} />
-                  <div className="w-24 text-sm font-medium text-white/70 capitalize">{engine}</div>
+                  <div className="w-24 text-sm font-medium text-white/70">{ENGINE_DISPLAY[engine] || engine}</div>
                   <div className="flex-1">
                     <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${rate}%`, background: ENGINE_COLORS[engine] || '#8b5cf6', opacity: 0.7 }} />
