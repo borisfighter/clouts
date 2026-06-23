@@ -36,10 +36,9 @@ export default function VisibilityPage() {
   async function loadData(brandId: string) {
     const days = range === '7d' ? 7 : range === '30d' ? 30 : 3650
     const since = new Date(Date.now() - days * 86400000).toISOString()
-    const query = supabase.from('mentions').select('*').eq('brand_id', brandId)
+    const baseQuery = supabase.from('mentions').select('*').eq('brand_id', brandId)
       .order('scraped_at', { ascending: false }).limit(500)
-    if (range !== 'all') query.gte('scraped_at', since)
-    const { data } = await query
+    const { data } = await (range !== 'all' ? baseQuery.gte('scraped_at', since) : baseQuery)
     setMentions(data || [])
   }
 

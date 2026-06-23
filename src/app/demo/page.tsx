@@ -87,7 +87,7 @@ export default function DemoPage() {
                 ))}
               </div>
               <div className="flex items-center gap-1.5 rounded-xl border border-violet-500/20 bg-violet-500/10 px-3 py-2 text-xs font-medium text-violet-400">
-                <Radio size={12} />
+                <Radio size={12} className="animate-pulse" />
                 Demo scan running...
               </div>
             </div>

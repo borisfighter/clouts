@@ -25,16 +25,19 @@ export function OnboardingChecklist({ steps }: { steps: Step[] }) {
         <div className="h-full rounded-full bg-violet-500/60 transition-all" style={{ width: `${pct}%` }} />
       </div>
       <div className="space-y-1.5">
-        {steps.map(({ id, label, done, href }) => (
-          <a key={id} href={done ? '#' : href}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${done ? 'text-white/30 cursor-default' : 'text-white/70 hover:bg-white/[0.04]'}`}>
+        {steps.map(({ id, label, done, href }) => {
+          const El = done ? 'div' : 'a'
+          return (
+          <El key={id} {...(!done ? { href } : {})}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors ${done ? 'text-white/30' : 'text-white/70 hover:bg-white/[0.04] cursor-pointer'}`}>
             <div className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 border ${done ? 'border-emerald-400/30 bg-emerald-400/15' : 'border-white/[0.12] bg-white/[0.04]'}`}>
               {done ? <Check size={11} className="text-emerald-400" /> : <span className="h-1.5 w-1.5 rounded-full bg-white/20" />}
             </div>
             <span className={done ? 'line-through' : ''}>{label}</span>
             {!done && <ChevronRight size={13} className="ml-auto text-white/20" />}
-          </a>
-        ))}
+          </El>
+          )
+        })}
       </div>
     </div>
   )

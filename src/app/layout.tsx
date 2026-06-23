@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: { default: 'Clouts — AI Visibility + Content Clipping', template: '%s | Clouts' },
-  description: 'Monitor your brand across 9 AI engines. Get AI-powered recommendations. Auto-clip your best brand moments into viral content.',
+  description: 'Monitor your brand across ChatGPT, Perplexity, Gemini, Grok, and Claude. Get AI-powered AEO recommendations and auto-clip your best brand moments.',
   keywords: ['AI visibility', 'brand monitoring', 'ChatGPT', 'Perplexity', 'AI search', 'content clipping', 'AEO', 'AI search optimization'],
   authors: [{ name: 'Clouts' }],
   creator: 'Clouts',
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.clouts.com'),
   openGraph: {
     title: 'Clouts — AI Visibility + Content Clipping',
-    description: 'Monitor your brand across 9 AI engines. Win in AI search.',
+    description: 'Monitor your brand across ChatGPT, Perplexity, Gemini, Grok, and Claude. Win in AI search.',
     url: 'https://www.clouts.com',
     siteName: 'Clouts',
     type: 'website',
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Clouts — Win in AI Search',
-    description: 'Monitor your brand across ChatGPT, Perplexity, Claude, Gemini, Grok and more.',
+    description: 'Monitor your brand across ChatGPT, Perplexity, Claude, Gemini, and Grok.',
     creator: '@cloutsdotcom',
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
