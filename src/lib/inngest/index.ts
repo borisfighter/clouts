@@ -63,8 +63,31 @@ export const hourlyScrape = inngest.createFunction(
 
     if (!brands?.length) return { triggered: 0 }
 
+    // Enforce per-brand monthly mention quota before triggering background scans.
+    // Without this check, a free user with 100 mentions/month could be scanned
+    // 24 times/day via cron, exhausting their entire monthly limit in hours.
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+    const PLAN_LIMITS: Record<string, number> = {
+      free: 100, starter: 1000, growth: 10000, pro: 10000, team: -1, enterprise: -1,
+    }
+
+    const eligibleBrands = []
+    for (const b of brands) {
+      const plan = (b.users as any)?.plan || 'free'
+      const limit = PLAN_LIMITS[plan] ?? 100
+      if (limit === -1) { eligibleBrands.push(b); continue }
+
+      const { count } = await supabase.from('mentions')
+        .select('*', { count: 'exact', head: true })
+        .eq('brand_id', b.id).gte('scraped_at', monthStart)
+      if ((count || 0) < limit) eligibleBrands.push(b)
+    }
+
+    if (!eligibleBrands.length) return { triggered: 0, reason: 'all brands at monthly limit' }
+
     await inngest.send(
-      brands.map((b: any) => ({
+      eligibleBrands.map((b: any) => ({
         name: 'brand/scrape',
         data: {
           brandId: b.id, brandName: b.name, domain: b.domain, keywords: b.keywords || [],
@@ -75,7 +98,7 @@ export const hourlyScrape = inngest.createFunction(
       }))
     )
 
-    return { triggered: brands.length }
+    return { triggered: eligibleBrands.length }
   }
 )
 
@@ -91,7 +114,7 @@ export const weeklyReport = inngest.createFunction(
     )
     const { data: brands } = await supabase
       .from('brands')
-      .select('id, name, users(email)')
+      .select('id, name, user_id, users(email, notif_weekly_report)')
       .not('keywords', 'eq', '{}')
 
     if (!brands?.length) return { sent: 0 }
@@ -99,7 +122,8 @@ export const weeklyReport = inngest.createFunction(
     let sent = 0
     for (const b of brands) {
       const email = (b.users as any)?.email
-      if (!email) continue
+      const optedOut = (b.users as any)?.notif_weekly_report === false
+      if (!email || optedOut) continue
       await step.run(`send-report-${b.id}`, async () => {
         const appUrl2 = process.env.NEXT_PUBLIC_APP_URL || 'https://www.clouts.com'
         const res = await fetch(`${appUrl2}/api/email/weekly-report`, {
@@ -108,7 +132,7 @@ export const weeklyReport = inngest.createFunction(
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${process.env.INNGEST_EVENT_KEY || ''}`,
           },
-          body: JSON.stringify({ brandId: b.id, email, brandName: b.name }),
+          body: JSON.stringify({ brandId: b.id, email, brandName: b.name, userId: b.user_id }),
         })
         if (!res.ok) {
           // fetch() only throws on network failure, not on a non-2xx
