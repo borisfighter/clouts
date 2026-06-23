@@ -27,17 +27,16 @@ export async function POST(req: NextRequest) {
       duration_sec: duration ? Math.round(duration) : null,
     }
 
-    // Try primary lookup: by asset ID (set when created from source URL)
-    let { error, count } = await supabase.from('clips')
+    // Update by asset ID (works for source-URL uploads)
+    const { error: e1 } = await supabase.from('clips')
       .update(updates).eq('mux_asset_id', assetId)
-      .select('id', { count: 'exact', head: true })
 
-    // Fallback: by upload ID (set when created via direct upload URL)
-    if (!error && (!count || count === 0) && uploadId) {
-      const { error: e2 } = await supabase.from('clips')
-        .update(updates).eq('mux_upload_id', uploadId)
-      error = e2
-    }
+    // Also update by upload ID as fallback (works for direct browser uploads)
+    const { error: e2 } = uploadId
+      ? await supabase.from('clips').update(updates).eq('mux_upload_id', uploadId)
+      : { error: null }
+
+    const error = e1 && e2 ? e1 : null // only fail if BOTH lookups errored
 
     if (error) {
       console.error('[mux webhook] failed to mark clip ready', { assetId, uploadId, error: error.message })
