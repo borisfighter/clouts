@@ -49,8 +49,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ sent: false, reason: 'No Resend key' })
   }
 
+  const ENGINE_LABELS: Record<string,string> = { chatgpt:'ChatGPT', perplexity:'Perplexity', gemini:'Gemini', grok:'Grok', claude:'Claude' }
   const engineTableRows = engineRows.map(({ engine, rate }) =>
-    `<tr><td style="padding:8px 16px;color:rgba(255,255,255,0.5);font-size:12px;text-transform:capitalize">${engine}</td><td style="padding:8px 16px;text-align:right;font-weight:700;font-size:13px;color:${rate >= 50 ? '#34d399' : rate >= 25 ? '#fbbf24' : '#f87171'}">${rate}%</td></tr>`
+    `<tr><td style="padding:8px 16px;color:rgba(255,255,255,0.5);font-size:12px">${ENGINE_LABELS[engine] || engine}</td><td style="padding:8px 16px;text-align:right;font-weight:700;font-size:13px;color:${rate >= 50 ? '#34d399' : rate >= 25 ? '#fbbf24' : '#f87171'}">${rate}%</td></tr>`
   ).join('')
 
   const html = `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;background:#08090A;color:#fff;padding:40px;max-width:600px;margin:0 auto">

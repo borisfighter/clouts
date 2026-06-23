@@ -128,7 +128,7 @@ export default async function ShareReportPage({ params }: { params: { slug: stri
               {byEngine.sort((a, b) => (b.rate ?? 0) - (a.rate ?? 0)).map(({ engine, total, mentioned, rate, avgScore: es }) => (
                 <div key={engine} className="flex items-center gap-4 px-6 py-4">
                   <div className="h-3 w-3 rounded-full shrink-0" style={{ background: ENGINE_COLORS[engine] || '#666', opacity: 0.8 }} />
-                  <span className="text-sm font-medium text-white/70 capitalize w-24">{engine}</span>
+                  <span className="text-sm font-medium text-white/70 w-24">{(({ perplexity: 'Perplexity', chatgpt: 'ChatGPT', gemini: 'Gemini', grok: 'Grok', claude: 'Claude' })[engine] || engine)}</span>
                   <div className="flex-1">
                     <div className="h-2 rounded-full bg-white/[0.05] overflow-hidden">
                       <div className="h-full rounded-full transition-all" style={{ width: `${rate ?? 0}%`, background: ENGINE_COLORS[engine] || '#8b5cf6', opacity: 0.7 }} />

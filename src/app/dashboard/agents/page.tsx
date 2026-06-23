@@ -252,7 +252,7 @@ export default function AgentsPage() {
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${h.severity === 'high' ? 'bg-red-400/15 text-red-400' : h.severity === 'medium' ? 'bg-yellow-400/15 text-yellow-400' : 'bg-white/[0.08] text-white/40'}`}>
                         {h.severity}
                       </span>
-                      <span className="text-xs font-semibold text-white capitalize">{h.engine}</span>
+                      <span className="text-xs font-semibold text-white">{(({ perplexity: 'Perplexity', chatgpt: 'ChatGPT', gemini: 'Gemini', grok: 'Grok', claude: 'Claude' })[h.engine] || h.engine)}</span>
                       <span className="text-xs text-white/40">— "{h.query}"</span>
                     </div>
                     <p className="text-xs text-white/60">{h.issue}</p>

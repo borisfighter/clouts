@@ -26,6 +26,7 @@ function SettingsInner() {
   const [portalLoading, setPortalLoading] = useState(false)
   const [billingError, setBillingError] = useState('')
   const [suggesting, setSuggesting] = useState(false)
+  const [suggestionError, setSuggestionError] = useState('')
   const [shareSlug, setShareSlug] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [deletingBrand, setDeletingBrand] = useState(false)
@@ -138,6 +139,7 @@ function SettingsInner() {
   const suggestKeywords = async () => {
     if (!name) return
     setSuggesting(true)
+    setSuggestionError('')
     try {
       const res = await fetch('/api/suggestions/keywords', {
         method: 'POST',
@@ -145,10 +147,15 @@ function SettingsInner() {
         body: JSON.stringify({ name, domain }),
       })
       const data = await res.json()
-      if (data.suggestions) {
+      if (data.suggestions?.length) {
         const newKws = data.suggestions.filter((s: string) => !keywords.includes(s))
-        setKeywords(prev => [...prev, ...newKws].slice(0, 10))
+        if (newKws.length === 0) setSuggestionError('All suggestions already added')
+        else setKeywords(prev => [...prev, ...newKws].slice(0, 10))
+      } else {
+        setSuggestionError('No suggestions returned — try adding a domain')
       }
+    } catch {
+      setSuggestionError('Failed to fetch suggestions')
     } finally {
       setSuggesting(false)
     }
