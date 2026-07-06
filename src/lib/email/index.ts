@@ -50,7 +50,7 @@ export async function sendWelcomeEmail(email: string, name?: string) {
     </div>
   </div>
   <a href="https://www.clouts.com/dashboard" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:12px 24px;border-radius:12px;font-weight:700;font-size:14px">Open your dashboard →</a>
-  <p style="color:rgba(255,255,255,0.2);font-size:12px;margin-top:40px">Clouts · AI Visibility + Content Clipping · <a href="https://www.clouts.com" style="color:rgba(255,255,255,0.3)">clouts.com</a></p>
+  <p style="color:rgba(255,255,255,0.2);font-size:12px;margin-top:40px">Clouts · AI Visibility + Content Clipping · <a href="https://www.clouts.com" style="color:rgba(255,255,255,0.3)">clouts.com</a> · <a href="https://www.clouts.com/dashboard/settings" style="color:rgba(255,255,255,0.3)">Manage email preferences</a></p>
 </body>
 </html>`,
   })
@@ -72,7 +72,7 @@ export async function sendScanCompleteEmail(email: string, brandName: string, me
     <p style="color:rgba(255,255,255,0.3);font-size:13px;margin:8px 0 0">across ${totalScans} queries</p>
   </div>
   <a href="https://www.clouts.com/dashboard/visibility" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:12px 24px;border-radius:12px;font-weight:700;font-size:14px">View full report →</a>
-  <p style="color:rgba(255,255,255,0.2);font-size:12px;margin-top:40px">Clouts · <a href="https://www.clouts.com" style="color:rgba(255,255,255,0.3)">clouts.com</a></p>
+  <p style="color:rgba(255,255,255,0.2);font-size:12px;margin-top:40px">Clouts · <a href="https://www.clouts.com" style="color:rgba(255,255,255,0.3)">clouts.com</a> · <a href="https://www.clouts.com/dashboard/settings" style="color:rgba(255,255,255,0.3)">Manage email preferences</a></p>
 </body>
 </html>`,
   })

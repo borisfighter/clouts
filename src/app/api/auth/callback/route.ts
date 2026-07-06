@@ -7,9 +7,16 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') || '/dashboard'
 
+  const type = searchParams.get('type')
+
   if (code) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.exchangeCodeForSession(code)
+
+    // For password recovery, skip new-user flow — just redirect to update-password
+    if (user && type === 'recovery') {
+      return NextResponse.redirect(`${origin}/auth/update-password`)
+    }
 
     if (user) {
       // Ensure user row exists
