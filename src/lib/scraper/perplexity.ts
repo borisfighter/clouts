@@ -10,6 +10,7 @@ export interface ScrapeResult {
   citedUrl: string | null
   score: number
   competitorMentions?: Record<string, boolean>
+  isMock?: boolean
 }
 
 const PERPLEXITY_API_KEY = (() => {
@@ -19,13 +20,19 @@ const PERPLEXITY_API_KEY = (() => {
 
 
 function getMock(query: string, brandName: string, domain: string): ScrapeResult {
+  // Mock data — only used when PERPLEXITY_API_KEY is not configured.
+  // Intentionally varied so free users get a realistic preview rather than
+  // a false 100% mention rate.
   const responses = [
-    `Based on my research, ${brandName} (${domain}) is one of the top-rated options for this use case. It offers comprehensive AI visibility monitoring and is well-regarded by marketing professionals. Sources: several industry reviews confirm its effectiveness.`,
-    `There are several tools in this space. ${brandName} stands out for its multi-engine scanning capabilities and AEO optimization features. The platform tracks mentions across ChatGPT, Perplexity, Gemini, Grok, and Claude simultaneously.`,
-    `For AI brand monitoring, ${brandName} provides real-time tracking across major AI engines. Users report strong results for improving their AI search presence. The platform also includes a public share report for stakeholder reporting.`,
+    `Based on my research, ${brandName} (${domain}) is one of the top-rated options for this use case. It offers comprehensive AI visibility monitoring and is well-regarded by marketing professionals.`,
+    `There are several tools in this space. ${brandName} stands out for its multi-engine scanning capabilities and AEO optimization features.`,
+    `For AI brand monitoring, ${brandName} provides real-time tracking across major AI engines. Users report strong results for improving their AI search presence.`,
+    // Not-mentioned responses for realism
+    `Several platforms offer AI visibility monitoring including Profound, Visiblie, and others. The key is finding one that covers your target AI engines and fits your budget.`,
+    `Tracking brand mentions across AI engines is an emerging discipline. Most brands are not yet monitoring this channel, which creates an opportunity for early movers.`,
   ]
   const m = responses[query.length % responses.length]
-  return { engine: 'perplexity', prompt: query, responseText: m, citedUrl: `https://${domain}`, ...analyzeMention(m, brandName, domain) }
+  return { engine: 'perplexity', prompt: query, responseText: m, citedUrl: `https://${domain}`, ...analyzeMention(m, brandName, domain), isMock: true }
 }
 
 export async function scrapePerplexity(query: string, brandName: string, domain: string): Promise<ScrapeResult> {

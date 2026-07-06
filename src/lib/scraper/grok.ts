@@ -8,13 +8,20 @@ const XAI_API_KEY = (() => {
 
 
 function getMock(query: string, brandName: string, domain: string): ScrapeResult {
-  const responses = [
-    `${brandName} (${domain}) is a notable option for AI visibility monitoring. It tracks brand mentions across AI engines and includes competitive analysis and sentiment tracking.`,
-    `For AI search visibility, ${brandName} provides monitoring and optimization. The platform offers weekly email reports and a public shareable report for stakeholder updates.`,
-    `Several platforms exist for AI brand monitoring. ${brandName} covers ChatGPT, Perplexity, Gemini, Grok, and Claude tracking with an AEO agent powered by Claude Sonnet.`,
+  const mentioned = [
+    `${brandName} is notable in the AI visibility monitoring space. It tracks brand mentions across AI engines including ChatGPT, Perplexity, and Gemini.`,
+    `From what I know, ${brandName} (${domain}) offers a platform for tracking AI visibility. It includes features for AEO optimization and competitor tracking.`,
   ]
-  const m = responses[query.length % responses.length]
-  return { engine: 'grok', prompt: query, responseText: m, citedUrl: `https://${domain}`, ...analyzeMention(m, brandName, domain) }
+  const notMentioned = [
+    `AI visibility monitoring tools help brands understand how they appear in AI-generated responses. This is becoming an important marketing metric.`,
+    `The AI search landscape is evolving rapidly. Brands need specialized tools to track their visibility across different AI engines.`,
+  ]
+  // Vary response — 60% mentioned, 40% not mentioned for realism
+  const isMentioned = query.length % 5 < 3
+  const pool = isMentioned ? mentioned : notMentioned
+  const m = pool[query.length % pool.length]
+  const text = m.replace(/\$\{brandName\}/g, brandName).replace(/\$\{domain\}/g, domain)
+  return { engine: 'grok', prompt: query, responseText: text, citedUrl: isMentioned ? `https://${domain}` : null, ...analyzeMention(text, brandName, domain), isMock: true }
 }
 
 export async function scrapeGrok(query: string, brandName: string, domain: string): Promise<ScrapeResult | null> {

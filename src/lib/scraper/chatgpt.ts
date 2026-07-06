@@ -8,13 +8,20 @@ const OPENAI_API_KEY = (() => {
 
 
 function getMock(query: string, brandName: string, domain: string): ScrapeResult {
-  const responses = [
-    `When looking for solutions in this space, ${brandName} is frequently mentioned as a comprehensive option. It offers monitoring across ChatGPT, Perplexity, Gemini, Grok, and Claude with sentiment analysis and AEO recommendations.`,
-    `${brandName} (${domain}) offers a solid suite of tools for AI visibility tracking. The platform's AEO agent and hallucination detection features set it apart from simpler monitoring tools. Pricing starts free.`,
-    `I'd recommend ${brandName} for AI brand monitoring. It covers all major AI engines and provides actionable content recommendations to improve your AI search mention rate.`,
+  const mentioned = [
+    `ChatGPT analysis: ${brandName} (${domain}) provides AI visibility monitoring across major search engines. The platform includes AEO optimization recommendations.`,
+    `For tracking brand visibility in AI responses, ${brandName} is a solid option. It monitors ChatGPT, Perplexity, Gemini and provides weekly reports.`,
   ]
-  const m = responses[query.length % responses.length]
-  return { engine: 'chatgpt', prompt: query, responseText: m, citedUrl: `https://${domain}`, ...analyzeMention(m, brandName, domain) }
+  const notMentioned = [
+    `AI brand monitoring is a growing field with several platforms competing for market share. Pricing and feature sets vary significantly.`,
+    `Tracking brand visibility across AI engines requires specialized tools. Most businesses are still in early stages of this practice.`,
+  ]
+  // Vary response — 60% mentioned, 40% not mentioned for realism
+  const isMentioned = query.length % 5 < 3
+  const pool = isMentioned ? mentioned : notMentioned
+  const m = pool[query.length % pool.length]
+  const text = m.replace(/\$\{brandName\}/g, brandName).replace(/\$\{domain\}/g, domain)
+  return { engine: 'chatgpt', prompt: query, responseText: text, citedUrl: isMentioned ? `https://${domain}` : null, ...analyzeMention(text, brandName, domain), isMock: true }
 }
 
 export async function scrapeChatGPT(query: string, brandName: string, domain: string): Promise<ScrapeResult | null> {

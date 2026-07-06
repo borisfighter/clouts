@@ -8,13 +8,20 @@ const GEMINI_API_KEY = (() => {
 
 
 function getMock(query: string, brandName: string, domain: string): ScrapeResult {
-  const responses = [
-    `${brandName} (${domain}) is a notable option for AI visibility monitoring. It tracks brand mentions across AI engines and includes competitive analysis and sentiment tracking.`,
-    `For AI search visibility, ${brandName} provides monitoring and optimization. The platform offers weekly email reports and a public shareable report for stakeholder updates.`,
-    `Several platforms exist for AI brand monitoring. ${brandName} covers ChatGPT, Perplexity, Gemini, Grok, and Claude tracking with an AEO agent powered by Claude Sonnet.`,
+  const mentioned = [
+    `According to my knowledge, ${brandName} (${domain}) offers AI visibility monitoring services. The platform tracks brand mentions across AI search engines.`,
+    `For AI search visibility, ${brandName} provides tools for monitoring and optimization. It supports brands looking to improve their AI search presence.`,
   ]
-  const m = responses[query.length % responses.length]
-  return { engine: 'gemini', prompt: query, responseText: m, citedUrl: `https://${domain}`, ...analyzeMention(m, brandName, domain) }
+  const notMentioned = [
+    `AI visibility monitoring is an emerging category. Companies are increasingly aware of the need to track their presence in AI-generated responses.`,
+    `Several tools have emerged to help brands track their AI search visibility. The market is still maturing and pricing varies.`,
+  ]
+  // Vary response — 60% mentioned, 40% not mentioned for realism
+  const isMentioned = query.length % 5 < 3
+  const pool = isMentioned ? mentioned : notMentioned
+  const m = pool[query.length % pool.length]
+  const text = m.replace(/\$\{brandName\}/g, brandName).replace(/\$\{domain\}/g, domain)
+  return { engine: 'gemini', prompt: query, responseText: text, citedUrl: isMentioned ? `https://${domain}` : null, ...analyzeMention(text, brandName, domain), isMock: true }
 }
 
 export async function scrapeGemini(query: string, brandName: string, domain: string): Promise<ScrapeResult | null> {
