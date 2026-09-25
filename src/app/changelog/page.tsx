@@ -88,7 +88,7 @@ export default function ChangelogPage() {
         <div className="mt-16 rounded-2xl border border-violet-500/20 bg-violet-500/[0.06] p-6 text-center">
           <p className="text-sm font-semibold text-white mb-2">Want to shape the roadmap?</p>
           <p className="text-sm text-white/40 mb-4">
-            Email <a href="mailto:hello@clouts.com" className="text-violet-400 hover:text-violet-300">hello@clouts.com</a> — we build based on user feedback.
+            Email <a href="mailto:boris@kumbaya.com" className="text-violet-400 hover:text-violet-300">boris@kumbaya.com</a> — we build based on user feedback.
           </p>
           <Link href="/auth/signup"
             className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-violet-500 transition-colors">

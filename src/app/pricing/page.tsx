@@ -88,7 +88,7 @@ export default function PricingPage() {
       if (data.error) {
         setCheckoutError(
           data.error.includes('not configured') || data.error.includes('Price not configured')
-            ? "Trial checkout isn't fully set up yet — email hello@clouts.com and we'll get you started manually."
+            ? "Trial checkout isn't fully set up yet — email boris@kumbaya.com and we'll get you started manually."
             : data.error
         )
         return

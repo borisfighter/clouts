@@ -24,7 +24,7 @@ export default function TermsPage() {
             { title: '7. Intellectual Property', body: 'The Service and its original content, features, and functionality are owned by Clouts and are protected by international copyright, trademark, and other intellectual property laws.' },
             { title: '8. Limitation of Liability', body: 'To the maximum extent permitted by law, Clouts shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the Service.' },
             { title: '9. Changes to Terms', body: 'We reserve the right to modify these terms at any time. We will notify users of significant changes via email or a prominent notice on the Service.' },
-            { title: '10. Contact', body: 'For questions about these Terms, please contact us at hello@clouts.com.' },
+            { title: '10. Contact', body: 'For questions about these Terms, please contact us at boris@kumbaya.com.' },
           ].map(({ title, body }) => (
             <div key={title}>
               <h2 className="text-lg font-bold text-white mb-2">{title}</h2>

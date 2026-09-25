@@ -19,12 +19,12 @@ export default function PrivacyPage() {
             { title: '2. How We Use Your Information', body: 'We use collected information to: provide and improve the Service; process payments; send transactional emails (scan results, account notifications); analyze usage patterns; and comply with legal obligations. We do not sell your personal data.' },
             { title: '3. Data Storage', body: 'Your data is stored securely using Supabase (PostgreSQL) hosted on AWS us-east-1. We use industry-standard encryption for data in transit (TLS) and at rest.' },
             { title: '4. Third-Party Services', body: 'We use third-party services including: Supabase (database), Vercel (hosting), Stripe (payments), Mux (video), Resend (email), and AI providers (OpenAI, Anthropic, Google, xAI, Perplexity) for scanning. Each has their own privacy policy.' },
-            { title: '5. Data Retention', body: 'We retain your data for as long as your account is active. You may request deletion of your account and associated data by emailing hello@clouts.com. Billing records are retained as required by law.' },
-            { title: '6. Your Rights', body: 'You have the right to: access your personal data; correct inaccurate data; request deletion; export your data; and opt out of non-essential communications. Contact hello@clouts.com to exercise these rights.' },
+            { title: '5. Data Retention', body: 'We retain your data for as long as your account is active. You may request deletion of your account and associated data by emailing boris@kumbaya.com. Billing records are retained as required by law.' },
+            { title: '6. Your Rights', body: 'You have the right to: access your personal data; correct inaccurate data; request deletion; export your data; and opt out of non-essential communications. Contact boris@kumbaya.com to exercise these rights.' },
             { title: '7. Cookies', body: 'We use essential cookies for authentication and session management. We do not use tracking or advertising cookies.' },
             { title: '8. Children\'s Privacy', body: 'The Service is not directed to children under 13. We do not knowingly collect personal information from children under 13.' },
             { title: '9. Changes to This Policy', body: 'We may update this Privacy Policy from time to time. We will notify you of significant changes via email.' },
-            { title: '10. Contact Us', body: 'For privacy-related questions or requests, contact us at hello@clouts.com.' },
+            { title: '10. Contact Us', body: 'For privacy-related questions or requests, contact us at boris@kumbaya.com.' },
           ].map(({ title, body }) => (
             <div key={title}>
               <h2 className="text-lg font-bold text-white mb-2">{title}</h2>

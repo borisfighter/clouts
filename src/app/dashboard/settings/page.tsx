@@ -519,7 +519,7 @@ function SettingsInner() {
           className="flex items-center gap-2 text-sm text-white/40 hover:text-white transition-colors">
           <LogOut size={14} /> Sign out
         </button>
-        <p className="text-xs text-white/20">To delete your account, email <a href="mailto:hello@clouts.com" className="text-white/40 hover:text-white">hello@clouts.com</a></p>
+        <p className="text-xs text-white/20">To delete your account, email <a href="mailto:boris@kumbaya.com" className="text-white/40 hover:text-white">boris@kumbaya.com</a></p>
       </div>
     </div>
   )
