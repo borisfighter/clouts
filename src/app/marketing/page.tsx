@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Radio, Scissors, Bot, BarChart3, Check, Zap, TrendingUp, Globe, Shield, ChevronRight, Star } from 'lucide-react'
+import { ArrowRight, Radio, Scissors, Bot, BarChart3, Check, Zap, TrendingUp, Globe, Shield, ChevronRight } from 'lucide-react'
 
 const ENGINES = ['ChatGPT', 'Perplexity', 'Claude', 'Gemini', 'Grok', 'Copilot', 'Meta AI', 'DeepSeek', 'Google AIO']
 
@@ -87,12 +87,6 @@ const PLANS = [
   },
 ]
 
-const TESTIMONIALS = [
-  { name: 'Sarah K.', role: 'VP Marketing at TechCorp', body: 'We went from 12% AI mention rate to 67% in 6 weeks using Clouts\'s AEO recommendations. It\'s the only tool tracking what actually matters now.', stars: 5 },
-  { name: 'Marcus T.', role: 'Founder, GrowthLab', body: 'I had no idea ChatGPT was recommending competitors over us 90% of the time. Clouts showed us exactly why, and now we\'re the top recommendation.', stars: 5 },
-  { name: 'Diana R.', role: 'CMO at Scaleup', body: 'The clip feature alone is worth it. Our AI mention moments are getting 10x more reach now that we\'re clipping and distributing them automatically.', stars: 5 },
-]
-
 export default function MarketingPage() {
   return (
     <div className="bg-[#08090A] text-white min-h-screen">
@@ -178,38 +172,6 @@ export default function MarketingPage() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Live examples */}
-      <section className="border-b border-white/[0.07] bg-white/[0.01] py-10">
-        <div className="mx-auto max-w-5xl px-6">
-          <p className="text-center text-xs font-semibold text-white/20 uppercase tracking-widest mb-8">
-            Brands monitoring AI visibility with Clouts
-          </p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              { name: 'Notion', rate: '78%', engine: 'Perplexity', color: '#10b981' },
-              { name: 'Linear', rate: '65%', engine: 'ChatGPT', color: '#8b5cf6' },
-              { name: 'Vercel', rate: '91%', engine: 'Gemini', color: '#3b82f6' },
-              { name: 'Supabase', rate: '83%', engine: 'Claude', color: '#ec4899' },
-            ].map(({ name, rate, engine, color }) => (
-              <div key={name} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-sm font-black text-white">
-                  {name[0]}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-white/70">{name}</p>
-                  <p className="text-[10px]" style={{ color }}>
-                    {rate} on {engine}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-center text-[10px] text-white/20 mt-4">
-            * Illustrative data. Sign up to see your real AI mention rate.
-          </p>
         </div>
       </section>
 
@@ -345,30 +307,6 @@ export default function MarketingPage() {
                   </div>
                   <h3 className="text-sm font-bold text-white mb-2">{title}</h3>
                   <p className="text-sm text-white/40 leading-relaxed">{desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="border-t border-white/[0.07] py-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-black tracking-tight mb-3">Brands winning in AI search</h2>
-            <p className="text-white/40">Join teams that monitor, optimize, and dominate AI recommendations</p>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {TESTIMONIALS.map(({ name, role, body, stars }) => (
-              <div key={name} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6">
-                <div className="flex gap-0.5 mb-3">
-                  {Array(stars).fill(0).map((_, i) => <Star key={i} size={12} className="text-yellow-400 fill-yellow-400" />)}
-                </div>
-                <p className="text-sm text-white/70 leading-relaxed mb-4">"{body}"</p>
-                <div>
-                  <p className="text-sm font-semibold text-white">{name}</p>
-                  <p className="text-xs text-white/30">{role}</p>
                 </div>
               </div>
             ))}
