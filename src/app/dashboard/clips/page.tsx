@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { VerticalExportButton } from '@/components/clips/vertical-export'
 import { Scissors, Upload, Loader2, Play, Download, Trash2, ExternalLink, RefreshCw } from 'lucide-react'
 
 interface Clip {
@@ -265,6 +266,9 @@ export default function ClipsPage() {
                       className="flex items-center justify-center gap-1 rounded-lg border border-white/[0.07] px-2 py-1.5 text-[11px] text-white/30 hover:text-white hover:border-white/20">
                       <Download size={10} /> MP4
                     </a>
+                  )}
+                  {clip.kind === 'clip' && clip.status === 'ready' && clip.mux_playback_id && (
+                    <VerticalExportButton clipId={clip.id} playbackId={clip.mux_playback_id} title={clip.title} hasCaptions={!!clip.has_captions} />
                   )}
                   {clip.has_captions && (
                     <a href={`/api/clips/${clip.id}/captions?format=srt`}
