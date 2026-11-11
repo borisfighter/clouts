@@ -101,7 +101,7 @@ function DashboardPageInner() {
       })
       const data = await res.json()
       if (data.error) { setScanMsg(`⚠ ${data.error}`); return }
-      setScanMsg(`✓ ${data.mentioned}/${data.scraped} mentions detected`)
+      setScanMsg(`✓ ${data.mentioned}/${data.scraped} mentions detected` + (data.failures?.length ? ' · Not run: ' + data.failures.map((f: any) => f.label + (f.notConfigured ? ' (not connected)' : ' (error)')).join(', ') : ''))
       await loadData(brand.id)
     } catch { setScanMsg('Scan failed') }
     finally {

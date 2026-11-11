@@ -96,14 +96,14 @@ export default function AgenciesPage() {
         <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.06] p-8">
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="flex-1">
-              <p className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-2">Team Plan</p>
-              <h3 className="text-2xl font-black text-white mb-3">$299/mo · Unlimited everything</h3>
+              <p className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-2">Growth Plan</p>
+              <h3 className="text-2xl font-black text-white mb-3">Growth · $399/mo</h3>
               <ul className="space-y-2">
                 {[
-                  'Unlimited client brands',
-                  'Unlimited AI mentions/mo',
+                  '5 client brands (more on Enterprise)',
+                  '10,000 AI answers/mo',
                   'All 5 AI engines (ChatGPT, Perplexity, Gemini, Grok, Claude)',
-                  'Unlimited clips and agents',
+                  '20 clips/mo + AEO agent',
                   'Hourly automated scans',
                   'Public shareable reports per brand',
                   'Dedicated support',
@@ -115,7 +115,7 @@ export default function AgenciesPage() {
               </ul>
             </div>
             <div className="text-center shrink-0">
-              <p className="text-5xl font-black text-white mb-1">$299</p>
+              <p className="text-5xl font-black text-white mb-1">$399</p>
               <p className="text-white/40 text-sm mb-6">/month · cancel anytime</p>
               <Link href="/auth/signup"
                 className="block rounded-xl bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500 transition-colors">

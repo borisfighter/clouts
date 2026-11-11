@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Radio, Scissors, Bot, BarChart3, Check, Zap, TrendingUp, Globe, Shield, ChevronRight } from 'lucide-react'
 
-const ENGINES = ['ChatGPT', 'Perplexity', 'Claude', 'Gemini', 'Grok', 'Copilot', 'Meta AI', 'DeepSeek', 'Google AIO']
+const ENGINES = ['ChatGPT', 'Perplexity', 'Claude', 'Gemini', 'Grok']
 
 const FEATURES = [
   {
@@ -66,24 +66,24 @@ const PLANS = [
     features: ['1 brand', '100 AI mentions/mo', 'Perplexity only', 'AEO analysis', 'Email support'],
   },
   {
-    name: 'Pro',
-    price: { monthly: 79, yearly: 63 },
+    name: 'Starter',
+    price: { monthly: 99, yearly: 79 },
     desc: 'For growing brands',
     badge: 'Most Popular',
     color: 'border-violet-500/40 bg-violet-500/[0.06] shadow-xl shadow-violet-500/10',
-    cta: 'Get Pro',
+    cta: 'Start 3-day trial',
     ctaStyle: 'bg-violet-600 text-white hover:bg-violet-500',
-    features: ['5 brands', '10K AI mentions/mo', 'All 5 AI engines', '50 clips/mo', 'Real AEO agent', 'Priority support'],
+    features: ['1 brand', '1,000 AI answers/mo', 'ChatGPT, Perplexity, Gemini, Grok + Claude', 'Citations + competitor tracking', 'Daily automatic scans', 'Email support'],
   },
   {
-    name: 'Team',
-    price: { monthly: 299, yearly: 239 },
+    name: 'Growth',
+    price: { monthly: 399, yearly: 319 },
     desc: 'For agencies & teams',
     badge: 'Best Value',
     color: 'border-white/[0.08] bg-white/[0.01]',
-    cta: 'Get Team',
+    cta: 'Start 3-day trial',
     ctaStyle: 'border border-white/[0.10] text-white/70 hover:border-white/20 hover:text-white',
-    features: ['Unlimited brands', 'Unlimited mentions', 'All engines + AI Overview', 'Unlimited clips', 'Unlimited agents', 'Dedicated support'],
+    features: ['5 brands', '10,000 AI answers/mo', 'All 5 AI engines', 'AEO agent + content drafts', '20 clips/mo', 'Priority support'],
   },
 ]
 

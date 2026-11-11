@@ -1,10 +1,10 @@
 import { Scissors, Layout, Upload, TrendingUp } from 'lucide-react'
 
 const clipFeatures = [
-  { icon: Scissors, title: 'Auto-Clip Engine',   description: 'Detects high-value moments and clips them automatically. No manual scrubbing.' },
-  { icon: Layout,   title: 'Format Conversion',  description: 'Export in 9:16, 1:1, 16:9. Captions, b-roll, and branding auto-applied.' },
-  { icon: Upload,   title: 'One-Click Publish',  description: 'Push directly to TikTok, Instagram, YouTube Shorts, and LinkedIn.' },
-  { icon: TrendingUp, title: 'Clip Analytics',   description: 'Track views, shares, and downstream traffic from every published clip.' },
+  { icon: Scissors, title: 'Auto-Clip Engine',   description: 'Upload a video and Clouts transcribes it and suggests the strongest moments to clip.' },
+  { icon: Layout,   title: 'Format Conversion',  description: 'Pick 9:16, 1:1 or 16:9 for each clip, with auto-generated captions.' },
+  { icon: Upload,   title: 'One-Click Publish',  description: 'Queue clips for TikTok, Instagram Reels and YouTube Shorts.' },
+  { icon: TrendingUp, title: 'Clip Analytics',   description: 'Keep every clip, its captions and its publish status in one library.' },
 ]
 
 export function ClipsSection() {

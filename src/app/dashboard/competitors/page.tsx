@@ -97,7 +97,7 @@ export default function CompetitorsPage() {
   const myRate = mentions.length > 0 ? Math.round((myMentioned / mentions.length) * 100) : 0
 
   const compStats = competitors.map(comp => {
-    const matched = mentions.filter(m => m.response_text?.toLowerCase().includes(comp.toLowerCase())).length
+    const matched = mentions.filter(m => m.competitor_mentions && comp in m.competitor_mentions ? m.competitor_mentions[comp] : m.response_text?.toLowerCase().includes(comp.toLowerCase())).length
     return { comp, matched, total: mentions.length, rate: mentions.length > 0 ? Math.round((matched / mentions.length) * 100) : 0 }
   }).sort((a, b) => b.rate - a.rate)
 

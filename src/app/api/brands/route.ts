@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  await supabase.from('users').upsert({ id: user.id, email: user.email! }, { onConflict: 'id' })
+  await supabase.from('users').upsert({ id: user.id, email: user.email! }, { onConflict: 'id', ignoreDuplicates: true })
 
   const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
   const share_slug = slugBase + '-' + Math.random().toString(36).slice(2, 10)
