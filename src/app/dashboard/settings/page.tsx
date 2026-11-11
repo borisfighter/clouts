@@ -1,4 +1,5 @@
 'use client'
+import { PLANS, normalizePlan, planSummary } from '@/lib/plans'
 
 import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -7,8 +8,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 
 const PLAN_BADGES: Record<string, { label: string; color: string }> = {
   free:  { label: 'Free',  color: 'text-white/40 bg-white/[0.06] border-white/[0.08]' },
-  pro:   { label: 'Pro',   color: 'text-violet-300 bg-violet-500/15 border-violet-500/20' },
-  team:  { label: 'Team',  color: 'text-emerald-300 bg-emerald-400/15 border-emerald-400/20' },
+  starter:    { label: 'Starter',    color: 'text-blue-300 bg-blue-500/15 border-blue-500/20' },
+  growth:     { label: 'Growth',     color: 'text-violet-300 bg-violet-500/15 border-violet-500/20' },
+  enterprise: { label: 'Enterprise', color: 'text-emerald-300 bg-emerald-400/15 border-emerald-400/20' },
 }
 
 function SettingsInner() {
@@ -49,7 +51,7 @@ function SettingsInner() {
       if (!user) return setFetching(false)
       const { data: u } = await supabase.from('users').select('plan, notif_scan_complete, notif_weekly_report, notif_sentiment_alerts').eq('id', user.id).single()
       if (u) {
-        setUserPlan(u.plan || 'free')
+        setUserPlan(normalizePlan(u.plan))
         if (u.notif_scan_complete !== null) setNotifScanComplete(u.notif_scan_complete ?? true)
         if (u.notif_weekly_report !== null) setNotifWeeklyReport(u.notif_weekly_report ?? true)
         if (u.notif_sentiment_alerts !== null) setNotifSentimentAlerts(u.notif_sentiment_alerts ?? false)
@@ -186,12 +188,8 @@ function SettingsInner() {
     } else {
       // Check plan brand limit before inserting
       const { data: planUser } = await supabase.from('users').select('plan').eq('id', user.id).single()
-      const userPlanKey = planUser?.plan || 'free'
-      // Mirror PLANS config: free=1, starter=1, pro=5, growth=5, team/enterprise=-1
-      const BRAND_LIMITS: Record<string, number> = {
-        free: 1, starter: 1, pro: 5, growth: 5, team: -1, enterprise: -1,
-      }
-      const brandLimit = BRAND_LIMITS[userPlanKey] ?? 1
+      const userPlanKey = normalizePlan(planUser?.plan)
+      const brandLimit = PLANS[userPlanKey].limits.brands
       if (brandLimit !== -1) {
         const { count } = await supabase.from('brands').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
         if ((count || 0) >= brandLimit) {
@@ -391,9 +389,7 @@ function SettingsInner() {
             <div>
               <p className="text-sm text-white/70 font-medium capitalize">{userPlan} plan</p>
               <p className="text-xs text-white/30 mt-0.5">
-                {userPlan === 'free' ? '1 brand · 100 mentions/mo · Perplexity only'
-                  : userPlan === 'pro' ? '5 brands · 10K mentions/mo · All engines · 50 clips'
-                  : 'Unlimited everything'}
+                {planSummary(userPlan)}
               </p>
             </div>
           </div>

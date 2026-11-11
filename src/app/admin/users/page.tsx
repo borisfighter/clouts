@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Search, ChevronLeft, ChevronRight, Trash2, Edit2, X, Loader2 } from 'lucide-react'
 import { useRef } from 'react'
 
-const PLANS = ['free', 'pro', 'team']
+const PLANS = ['free', 'starter', 'growth', 'enterprise']
 const planBadge = (p: string) => ({
   enterprise: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
   team:       'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',

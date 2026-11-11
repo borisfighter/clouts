@@ -1,51 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { stripe, PLANS } from '@/lib/stripe'
+import { stripe, stripePriceId, trialDays } from '@/lib/stripe'
+import { CHECKOUT_PLANS, normalizePlan, type PlanKey } from '@/lib/plans'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest) {
-  if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 503 })
+  if (!stripe) return NextResponse.json({ error: 'Billing is not set up yet' }, { status: 503 })
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { plan, interval = 'monthly' } = await req.json()
-  const planConfig = PLANS[plan as keyof typeof PLANS]
-  if (!planConfig || plan === 'free') return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
+  if (plan === 'enterprise') {
+    return NextResponse.json({ error: 'Enterprise is set up by our team', contact: 'mailto:sales@clouts.com' }, { status: 400 })
+  }
+  if (!CHECKOUT_PLANS.includes(plan)) return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
+  const planKey = plan as PlanKey
+  const priceId = stripePriceId(planKey, interval === 'yearly' ? 'yearly' : 'monthly')
+  if (!priceId) return NextResponse.json({ error: 'Price not configured' }, { status: 503 })
 
-  const priceId = interval === 'yearly'
-    ? (planConfig as any).priceYearly
-    : (planConfig as any).priceMonthly
+  const { data: userData } = await supabase.from('users')
+    .select('plan, stripe_customer_id, stripe_subscription_id').eq('id', user.id).single()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin
 
-  if (!priceId) return NextResponse.json({ error: 'Price not configured' }, { status: 400 })
-
-  // Get or create Stripe customer
-  const { data: userData } = await supabase.from('users').select('stripe_customer_id').eq('id', user.id).single()
+  // Existing subscribers change plans in the billing portal (prorated), not a second subscription.
+  if (userData?.stripe_customer_id && userData.stripe_subscription_id && normalizePlan(userData.plan) !== 'free') {
+    const portal = await stripe.billingPortal.sessions.create({
+      customer: userData.stripe_customer_id,
+      return_url: `${appUrl}/dashboard/settings`,
+    })
+    return NextResponse.json({ url: portal.url })
+  }
 
   let customerId = userData?.stripe_customer_id
   if (!customerId) {
     const customer = await stripe.customers.create({ email: user.email!, metadata: { supabase_uid: user.id } })
     customerId = customer.id
-    await createAdminClient().from('users').upsert({ id: user.id, email: user.email!, stripe_customer_id: customerId })
+    const { error } = await createAdminClient().from('users')
+      .upsert({ id: user.id, email: user.email!, stripe_customer_id: customerId })
+    if (error) return NextResponse.json({ error: 'Could not save billing account' }, { status: 500 })
   }
 
+  const days = trialDays(planKey)
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
+    client_reference_id: user.id,
     mode: 'subscription',
-    payment_method_types: ['card'],
     line_items: [{ price: priceId, quantity: 1 }],
-    // If this plan has a trial, Stripe verifies/authorizes the card now
-    // (a $0 or small auth hold, card-network dependent) and starts billing
-    // automatically when the trial ends - no separate "free trial, then
-    // pay" step for the user, and no unverified trials.
-    subscription_data: (planConfig as any).trialDays
-      ? { trial_period_days: (planConfig as any).trialDays, trial_settings: { end_behavior: { missing_payment_method: 'cancel' } } }
-      : undefined,
+    allow_promotion_codes: true,
+    subscription_data: {
+      metadata: { user_id: user.id, plan: planKey },
+      ...(days ? { trial_period_days: days, trial_settings: { end_behavior: { missing_payment_method: 'cancel' as const } } } : {}),
+    },
     payment_method_collection: 'always',
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?upgraded=true${(planConfig as any).trialDays ? '&trial=true' : ''}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
-    metadata: { user_id: user.id, plan },
+    success_url: `${appUrl}/dashboard?upgraded=true${days ? '&trial=true' : ''}`,
+    cancel_url: `${appUrl}/pricing`,
+    metadata: { user_id: user.id, plan: planKey },
   })
 
   return NextResponse.json({ url: session.url })

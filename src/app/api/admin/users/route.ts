@@ -44,6 +44,7 @@ export async function PATCH(req: NextRequest) {
 
   const { userId, plan } = await req.json()
   if (!userId || !plan) return NextResponse.json({ error: 'userId and plan required' }, { status: 400 })
+  if (!['free', 'starter', 'growth', 'enterprise'].includes(plan)) return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
 
   const { error: dbErr } = await db.from('users').update({ plan }).eq('id', userId)
   if (dbErr) return NextResponse.json({ error: dbErr.message }, { status: 500 })

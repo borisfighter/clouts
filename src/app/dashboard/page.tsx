@@ -1,4 +1,5 @@
 'use client'
+import { planEngines } from '@/lib/plans'
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -97,7 +98,7 @@ function DashboardPageInner() {
       const res = await fetch('/api/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brandId: brand.id, engines: userPlan === 'free' ? ['perplexity'] : ['perplexity', 'chatgpt', 'gemini', 'grok', 'claude'] }),
+        body: JSON.stringify({ brandId: brand.id, engines: planEngines(userPlan) }),
       })
       const data = await res.json()
       if (data.error) { setScanMsg(`⚠ ${data.error}`); return }

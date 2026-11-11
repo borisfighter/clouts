@@ -1,4 +1,5 @@
 'use client'
+import { planEngines } from '@/lib/plans'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -76,7 +77,7 @@ export default function CompetitorsPage() {
     try {
       const res = await fetch('/api/scrape', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brandId: brand.id, engines: userPlan === 'free' ? ['perplexity'] : ['perplexity', 'chatgpt', 'gemini', 'grok', 'claude'] }),
+        body: JSON.stringify({ brandId: brand.id, engines: planEngines(userPlan) }),
       })
       const data = await res.json()
       if (!res.ok || data.error) {
