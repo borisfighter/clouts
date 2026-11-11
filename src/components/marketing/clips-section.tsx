@@ -2,8 +2,8 @@ import { Scissors, Layout, Upload, TrendingUp } from 'lucide-react'
 
 const clipFeatures = [
   { icon: Scissors, title: 'Auto-Clip Engine',   description: 'Upload a video and Clouts transcribes it, picks the strongest moments with AI and cuts them into clips.' },
-  { icon: Layout,   title: 'Auto Captions',      description: 'Every clip gets timed captions from the transcript, downloadable as SRT or VTT.' },
-  { icon: Upload,   title: 'Ready to Post',      description: 'Download each clip as MP4 with an AI-written social caption for TikTok, Reels and Shorts.' },
+  { icon: Layout,   title: 'Auto Captions',      description: 'Every clip gets timed captions from the transcript: burned into a vertical 9:16 export, or as SRT/VTT files.' },
+  { icon: Upload,   title: 'Ready to Post',      description: 'Publish straight to YouTube Shorts, or download MP4 with an AI-written caption for TikTok and Reels.' },
   { icon: TrendingUp, title: 'Clip Analytics',   description: 'Keep every source video, clip and caption file in one library.' },
 ]
 
@@ -22,9 +22,8 @@ export function ClipsSection() {
               <span className="text-emerald-400">viral short clips</span>
             </h2>
             <p className="mb-10 text-lg leading-relaxed text-white/40">
-              Every time your brand gets cited in an AI answer, Clouts auto-generates shareable
-              video clips optimized for TikTok, Reels, Shorts, and LinkedIn. Like Vyro and
-              Plaform — built right into your visibility dashboard.
+              Upload a podcast, webinar or demo and Clouts turns it into captioned short clips for
+              TikTok, Reels and Shorts, built right into your visibility dashboard.
             </p>
 
             <div className="grid grid-cols-2 gap-3">
