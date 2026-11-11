@@ -1,73 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getUserPlan, isUnlimited } from '@/lib/plan-limits'
+import { muxConfigured, muxClient, clipQuota, AUTO_SUBTITLES } from '@/lib/clips'
 
+/** Starts processing a video from a public URL. Direct file uploads use /api/clips/upload-url. */
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { brandId, title, sourceUrl } = await req.json()
-  if (!brandId || !title) return NextResponse.json({ error: 'brandId and title required' }, { status: 400 })
+  if (!brandId || !title || !sourceUrl) return NextResponse.json({ error: 'brandId, title and sourceUrl required' }, { status: 400 })
+  if (!/^https:\/\//i.test(sourceUrl)) return NextResponse.json({ error: 'Video URL must be a direct https link to a video file' }, { status: 400 })
 
-  const { data: brand } = await supabase
-    .from('brands').select('id').eq('id', brandId).eq('user_id', user.id).single()
+  const { data: brand } = await supabase.from('brands').select('id').eq('id', brandId).eq('user_id', user.id).single()
   if (!brand) return NextResponse.json({ error: 'Brand not found' }, { status: 404 })
 
-  const { plan } = await getUserPlan(user.id)
-
-  if (!isUnlimited(plan.limits.clips)) {
-    if (plan.limits.clips === 0) {
-      return NextResponse.json({
-        error: `Clips are not available on the ${plan.name} plan. Upgrade to Growth or Enterprise to create clips.`,
-      }, { status: 403 })
-    }
-    const since = new Date()
-    since.setDate(1); since.setHours(0, 0, 0, 0)
-    const { count } = await supabase
-      .from('clips').select('*', { count: 'exact', head: true })
-      .eq('brand_id', brandId).gte('created_at', since.toISOString())
-    if ((count || 0) >= plan.limits.clips) {
-      return NextResponse.json({
-        error: `Monthly clip limit reached (${plan.limits.clips}/mo on the ${plan.name} plan). Upgrade for more.`,
-      }, { status: 403 })
-    }
-  }
-
-  const muxId2 = process.env.MUX_TOKEN_ID
-  const muxSecret2 = process.env.MUX_TOKEN_SECRET
-  const willProcess = !!(muxId2 && muxSecret2 && !muxId2.includes('REPLACE') && muxId2.length > 5 && sourceUrl)
-  const initialStatus = willProcess ? 'processing' : sourceUrl ? 'awaiting_upload' : 'awaiting_upload'
+  const quota = await clipQuota(supabase, user.id)
+  if (quota.error) return NextResponse.json({ error: quota.error }, { status: 403 })
+  if (!muxConfigured()) return NextResponse.json({ error: 'Video processing is not connected yet (Mux keys missing).' }, { status: 503 })
 
   const { data: clip, error } = await supabase.from('clips').insert({
-    brand_id: brandId, title, source_url: sourceUrl || null, status: initialStatus,
+    brand_id: brandId, title, source_url: sourceUrl, status: 'processing', kind: 'source',
   }).select().single()
-
   if (error || !clip) return NextResponse.json({ error: 'Failed to create clip' }, { status: 500 })
 
-  // Mux upload if configured and source URL provided
-  const muxId = process.env.MUX_TOKEN_ID
-  const muxSecret = process.env.MUX_TOKEN_SECRET
-  const muxConfigured = muxId && muxSecret && !muxId.includes('REPLACE') && !muxSecret.includes('REPLACE') && muxId.length > 5
-
-  if (muxConfigured && sourceUrl) {
-    try {
-      const { default: Mux } = await import('@mux/mux-node')
-      const mux = new Mux({ tokenId: process.env.MUX_TOKEN_ID, tokenSecret: process.env.MUX_TOKEN_SECRET })
-      const asset = await mux.video.assets.create({
-        input: [{ url: sourceUrl }],
-        playback_policy: ['public'],
-        mp4_support: 'capped-1080p',
-      })
-      await supabase.from('clips').update({
-        mux_asset_id: asset.id,
-        mux_playback_id: asset.playback_ids?.[0]?.id,
-      }).eq('id', clip.id)
-      return NextResponse.json({ clipId: clip.id, muxAssetId: asset.id, status: 'processing' })
-    } catch (err) {
-      console.error('Mux error:', err)
-    }
+  try {
+    const asset = await muxClient().video.assets.create({
+      input: [{ url: sourceUrl, generated_subtitles: AUTO_SUBTITLES }],
+      playback_policy: ['public'],
+      mp4_support: 'capped-1080p',
+      passthrough: clip.id,
+    })
+    await supabase.from('clips').update({ mux_asset_id: asset.id, mux_playback_id: asset.playback_ids?.[0]?.id }).eq('id', clip.id)
+    return NextResponse.json({ clipId: clip.id, status: 'processing' })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Mux error'
+    await supabase.from('clips').update({ status: 'failed', error: message }).eq('id', clip.id)
+    return NextResponse.json({ error: `Video processing failed: ${message}` }, { status: 502 })
   }
-
-  return NextResponse.json({ clipId: clip.id, status: 'processing' })
 }

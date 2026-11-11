@@ -8,10 +8,12 @@ interface Clip {
   id: string; title: string; status: string; format: string
   mux_playback_id: string | null; mux_asset_id: string | null
   duration_sec: number | null; created_at: string; views: number
+  kind: 'source' | 'clip'; parent_id: string | null; description: string | null; has_captions: boolean; error: string | null
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  ready: 'Ready', processing: 'Processing', awaiting_upload: 'Awaiting upload', failed: 'Failed',
+  ready: 'Ready', processing: 'Processing', awaiting_upload: 'Uploading', failed: 'Failed',
+  transcribing: 'Transcribing', finding_moments: 'Finding moments', clipped: 'Clipped',
 }
 
 const STATUS_COLOR: Record<string, string> = {
@@ -19,6 +21,9 @@ const STATUS_COLOR: Record<string, string> = {
   processing:     'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
   awaiting_upload:'text-blue-400 bg-blue-400/10 border-blue-400/20',
   failed:         'text-red-400 bg-red-400/10 border-red-400/20',
+  transcribing:   'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
+  finding_moments:'text-violet-400 bg-violet-400/10 border-violet-400/20',
+  clipped:        'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
 }
 
 export default function ClipsPage() {
@@ -30,6 +35,7 @@ export default function ClipsPage() {
   const [showForm, setShowForm] = useState(false)
   const [title, setTitle] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
+  const [file, setFile] = useState<File | null>(null)
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -57,17 +63,28 @@ export default function ClipsPage() {
     setCreating(true)
     setErrorMsg('')
     try {
-      const res = await fetch('/api/clips/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brandId: brand.id, title: title.trim(), sourceUrl: sourceUrl.trim() || undefined }),
-      })
-      const data = await res.json()
-      if (data.error) { setErrorMsg(data.error); return }
-      setSuccessMsg(sourceUrl ? 'Clip created — video processing via Mux' : 'Clip created (Mux not configured — add MUX keys to enable video)')
-      setTitle(''); setSourceUrl(''); setShowForm(false)
+      if (file) {
+        const res = await fetch('/api/clips/upload-url', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brandId: brand.id, title: title.trim() }),
+        })
+        const data = await res.json()
+        if (!res.ok || data.error) { setErrorMsg(data.error || 'Upload failed'); return }
+        const put = await fetch(data.uploadUrl, { method: 'PUT', body: file })
+        if (!put.ok) { setErrorMsg('Video upload failed — please try again'); return }
+      } else {
+        if (!sourceUrl.trim()) { setErrorMsg('Choose a video file or paste a video URL'); return }
+        const res = await fetch('/api/clips/upload', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brandId: brand.id, title: title.trim(), sourceUrl: sourceUrl.trim() }),
+        })
+        const data = await res.json()
+        if (!res.ok || data.error) { setErrorMsg(data.error || 'Failed to start processing'); return }
+      }
+      setSuccessMsg('Video received. It will be transcribed and the best moments clipped automatically (usually a few minutes).')
+      setTitle(''); setSourceUrl(''); setFile(null); setShowForm(false)
       await loadClips(brand.id)
-      setTimeout(() => setSuccessMsg(''), 5000)
+      setTimeout(() => setSuccessMsg(''), 8000)
     } catch {
       setErrorMsg('Failed to create clip — check your connection and try again')
     } finally {
@@ -140,10 +157,12 @@ export default function ClipsPage() {
               <input value={title} onChange={e => setTitle(e.target.value)} required
                 placeholder="e.g. ChatGPT mention — Jan 2026"
                 className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-emerald-400/40" />
+              <input type="file" accept="video/*" onChange={e => setFile(e.target.files?.[0] || null)}
+                className="mt-2 block w-full text-xs text-white/50 file:mr-3 file:rounded-lg file:border-0 file:bg-white/[0.08] file:px-3 file:py-1.5 file:text-white/70" />
             </div>
             <div>
               <label className="block text-xs font-medium text-white/50 mb-1.5">
-                Video URL <span className="text-white/20">(optional — requires Mux)</span>
+                Video file or direct video URL
               </label>
               <input value={sourceUrl} onChange={e => setSourceUrl(e.target.value)}
                 placeholder="https://example.com/video.mp4"
@@ -192,7 +211,7 @@ export default function ClipsPage() {
           </div>
           <p className="text-base font-bold text-white/60 mb-1">No clips yet</p>
           <p className="text-sm text-white/30 mb-6 max-w-sm mx-auto">
-            Create a clip to save brand moments from AI mentions. Add MUX_TOKEN_ID and MUX_TOKEN_SECRET to enable video processing.
+            Upload a podcast, webinar or interview. Clouts transcribes it, picks the best moments with AI and cuts them into captioned clips.
           </p>
           <button onClick={() => setShowForm(true)}
             className="inline-flex items-center gap-2 rounded-xl bg-emerald-400 px-5 py-2.5 text-sm font-bold text-[#08090A] hover:opacity-85">
@@ -231,13 +250,25 @@ export default function ClipsPage() {
               </div>
               <div className="p-3">
                 <p className="text-sm font-semibold text-white truncate mb-0.5">{clip.title}</p>
-                <p className="text-xs text-white/30">{new Date(clip.created_at).toLocaleDateString()}{clip.views > 0 ? ` · ${clip.views} views` : ''}</p>
+                <p className="text-xs text-white/30">{clip.kind === 'source' ? 'Source video · ' : 'AI clip · '}{new Date(clip.created_at).toLocaleDateString()}</p>
+                {clip.description && <p className="mt-1 text-xs text-white/50 line-clamp-2">{clip.description}</p>}
+                {clip.error && <p className="mt-1 text-xs text-red-400/80">{clip.error}</p>}
                 <div className="mt-3 flex gap-1">
                   {clip.mux_playback_id && (
-                    <a href={`https://stream.mux.com/${clip.mux_playback_id}`} target="_blank" rel="noopener"
+                    <a href={`https://player.mux.com/${clip.mux_playback_id}`} target="_blank" rel="noopener"
                       className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-white/[0.07] py-1.5 text-[11px] text-white/30 hover:text-white hover:border-white/20 transition-colors">
                       <ExternalLink size={10} /> View
                     </a>
+                  )}
+                  {clip.kind === 'clip' && clip.status === 'ready' && clip.mux_playback_id && (
+                    <a href={`https://stream.mux.com/${clip.mux_playback_id}/capped-1080p.mp4?download=${encodeURIComponent(clip.title.replace(/[^\w-]+/g, '_'))}`}
+                      className="flex items-center justify-center gap-1 rounded-lg border border-white/[0.07] px-2 py-1.5 text-[11px] text-white/30 hover:text-white hover:border-white/20">
+                      <Download size={10} /> MP4
+                    </a>
+                  )}
+                  {clip.has_captions && (
+                    <a href={`/api/clips/${clip.id}/captions?format=srt`}
+                      className="flex items-center justify-center rounded-lg border border-white/[0.07] px-2 py-1.5 text-[11px] text-white/30 hover:text-white hover:border-white/20">SRT</a>
                   )}
                   <a href={`/dashboard/clips/publish?clipId=${clip.id}`}
                     className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-white/[0.07] py-1.5 text-[11px] text-white/30 hover:text-emerald-400 hover:border-emerald-400/20 transition-colors">
