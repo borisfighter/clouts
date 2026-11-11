@@ -1,3 +1,4 @@
+import { PLANS as PLANS_CONFIG } from '@/lib/plans'
 import Link from 'next/link'
 import { ArrowRight, Radio, Scissors, Bot, BarChart3, Check, Zap, TrendingUp, Globe, Shield, ChevronRight } from 'lucide-react'
 
@@ -63,7 +64,7 @@ const PLANS = [
     color: 'border-white/[0.08] bg-white/[0.01]',
     cta: 'Start free',
     ctaStyle: 'border border-white/[0.10] text-white/70 hover:border-white/20 hover:text-white',
-    features: ['1 brand', '100 AI mentions/mo', 'Perplexity only', 'AEO analysis', 'Email support'],
+    features: [...PLANS_CONFIG.free.features],
   },
   {
     name: 'Starter',
@@ -73,7 +74,7 @@ const PLANS = [
     color: 'border-violet-500/40 bg-violet-500/[0.06] shadow-xl shadow-violet-500/10',
     cta: 'Start 3-day trial',
     ctaStyle: 'bg-violet-600 text-white hover:bg-violet-500',
-    features: ['1 brand', '1,000 AI answers/mo', 'ChatGPT, Perplexity, Gemini, Grok + Claude', 'Citations + competitor tracking', 'Daily automatic scans', 'Email support'],
+    features: [...PLANS_CONFIG.starter.features],
   },
   {
     name: 'Growth',
@@ -83,7 +84,7 @@ const PLANS = [
     color: 'border-white/[0.08] bg-white/[0.01]',
     cta: 'Start 3-day trial',
     ctaStyle: 'border border-white/[0.10] text-white/70 hover:border-white/20 hover:text-white',
-    features: ['5 brands', '10,000 AI answers/mo', 'All 5 AI engines', 'AEO agent + content drafts', '20 clips/mo', 'Priority support'],
+    features: [...PLANS_CONFIG.growth.features],
   },
 ]
 

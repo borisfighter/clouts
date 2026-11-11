@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Check, Zap, ArrowRight } from 'lucide-react'
+import { PLANS } from '@/lib/plans'
 
 const TIERS = [
   {
@@ -10,16 +11,10 @@ const TIERS = [
     name: 'Starter',
     price: '$99',
     period: '/mo',
-    tagline: 'Track one AI engine and start building visibility',
+    tagline: 'Track your brand in ChatGPT and Perplexity every day',
     highlight: false,
     badge: null,
-    features: [
-      'ChatGPT monitoring',
-      'Up to 50 tracked prompts',
-      '1 seat',
-      'Basic visibility scoring',
-      'Email support',
-    ],
+    features: [...PLANS.starter.features],
   },
   {
     key: 'growth',
@@ -29,14 +24,7 @@ const TIERS = [
     tagline: 'Multi-engine coverage for teams actively optimizing',
     highlight: true,
     badge: 'Most popular',
-    features: [
-      'ChatGPT, Perplexity, Gemini, Grok + Claude',
-      'Up to 250 tracked prompts',
-      '5 seats',
-      'Sentiment + competitor tracking',
-      'AEO agent — 6 content pieces/mo',
-      'Priority support',
-    ],
+    features: [...PLANS.growth.features],
   },
   {
     key: 'enterprise',
@@ -46,15 +34,7 @@ const TIERS = [
     tagline: 'Full platform coverage with security and scale built in',
     highlight: false,
     badge: null,
-    features: [
-      'All 5 AI engines (ChatGPT, Perplexity, Gemini, Claude, Grok)',
-      'Unlimited tracked prompts',
-      'Unlimited seats',
-      'Prompt volumes (Google search volume)',
-      'Unlimited AEO agent runs',
-      'Custom contract + invoicing',
-      'Dedicated account team',
-    ],
+    features: [...PLANS.enterprise.features],
   },
 ]
 
@@ -63,6 +43,7 @@ export default function PricingPage() {
   const [checkoutError, setCheckoutError] = useState('')
 
   const handleStartTrial = async (tierKey: string) => {
+    if (tierKey === 'enterprise') { window.location.href = 'mailto:sales@clouts.com?subject=Clouts%20Enterprise'; return }
     setLoading(tierKey)
     setCheckoutError('')
     try {

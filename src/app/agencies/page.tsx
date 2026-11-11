@@ -101,7 +101,7 @@ export default function AgenciesPage() {
               <ul className="space-y-2">
                 {[
                   '5 client brands (more on Enterprise)',
-                  '10,000 AI answers/mo',
+                  '15,000 AI answers/mo · 100 prompts per brand',
                   'All 5 AI engines (ChatGPT, Perplexity, Gemini, Grok, Claude)',
                   '20 clips/mo + AEO agent',
                   'Hourly automated scans',

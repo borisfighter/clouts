@@ -1,4 +1,5 @@
 'use client'
+import { planEngines } from '@/lib/plans'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -68,9 +69,9 @@ export default function VisibilityPage() {
   const runScan = async () => {
     if (!brand) return
     setScraping(true)
-    setScanStatus({ msg: `Scanning ${userPlan === 'free' ? 'Perplexity' : 'all 5 engines'} — this can take a minute...`, type: 'info' })
+    setScanStatus({ msg: `Scanning ${planEngines(userPlan).length} engine(s) — this can take a minute...`, type: 'info' })
     try {
-      const engines = userPlan === 'free' ? ['perplexity'] : ['perplexity', 'chatgpt', 'gemini', 'grok', 'claude']
+      const engines = planEngines(userPlan)
       const res = await fetch('/api/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -102,7 +103,7 @@ export default function VisibilityPage() {
     const scores = em.filter(m => m.score != null).map(m => m.score!)
     const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b) / scores.length) : null
     const rate = total > 0 ? Math.round((mentioned / total) * 100) : null
-    const isLocked = plan === 'pro' && userPlan === 'free'
+    const isLocked = !planEngines(userPlan).includes(id)
     return { id, label, plan, color, mentioned, total, avgScore, rate, isLocked }
   })
 
@@ -222,7 +223,7 @@ export default function VisibilityPage() {
                   <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: color, opacity: isLocked ? 0.4 : 0.85 }} />
                   <div className="w-24 text-left">
                     <span className="text-sm font-medium text-white/80">{label}</span>
-                    {isLocked && <span className="ml-2 text-[9px] font-bold text-white/20 uppercase tracking-widest">Pro</span>}
+                    {isLocked && <span className="ml-2 text-[9px] font-bold text-white/20 uppercase tracking-widest">Upgrade</span>}
                   </div>
                   <div className="flex-1">
                     <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
