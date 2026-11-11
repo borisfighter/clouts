@@ -47,6 +47,23 @@ export default function AgentsPage() {
     load()
   }, [])
 
+  const [drafts, setDrafts] = useState<Record<number, string>>({})
+  const [drafting, setDrafting] = useState<number | null>(null)
+  const writeDraft = async (i: number, idea: any) => {
+    if (!brand) return
+    setDrafting(i); setAgentError('')
+    try {
+      const res = await fetch('/api/agents/run', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandId: brand.id, agentType: 'draft', idea }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) { setAgentError(data.error || 'Draft failed'); return }
+      setDrafts(d => ({ ...d, [i]: data.markdown }))
+    } catch { setAgentError('Draft failed — check your connection') }
+    finally { setDrafting(null) }
+  }
+
   const runAgent = async (type: string) => {
     if (!brand) return
     setRunning(type)
@@ -233,6 +250,19 @@ export default function AgentsPage() {
                         <li key={j} className="text-xs text-white/50 flex gap-2"><span className="text-white/20 shrink-0">{j+1}.</span>{o}</li>
                       ))}
                     </ul>
+                    <div className="mt-3 flex gap-2">
+                      <button onClick={() => writeDraft(i, c)} disabled={drafting !== null}
+                        className="rounded-lg border border-violet-500/30 px-3 py-1.5 text-xs font-semibold text-violet-300 hover:bg-violet-500/10 disabled:opacity-40">
+                        {drafting === i ? 'Writing draft…' : drafts[i] ? 'Rewrite draft' : 'Write draft'}
+                      </button>
+                      {drafts[i] && (
+                        <button onClick={() => navigator.clipboard.writeText(drafts[i])}
+                          className="rounded-lg border border-white/[0.10] px-3 py-1.5 text-xs text-white/60 hover:text-white">Copy Markdown</button>
+                      )}
+                    </div>
+                    {drafts[i] && (
+                      <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-lg bg-black/40 p-3 text-xs text-white/70">{drafts[i]}</pre>
+                    )}
                   </div>
                 ))}
               </div>
