@@ -59,37 +59,11 @@ function PublishQueuePage() {
   const togglePlatform = (id: string) => setSelectedPlatforms(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])
 
   const handleQueue = async () => {
-    if (!selectedClip || !selectedPlatforms.length) return
-    setPublishing(true)
-    setQueueError('')
-    const succeeded: string[] = []
-    const failed: string[] = []
-    for (const platform of selectedPlatforms) {
-      const { error } = await supabase.from('clip_publishes').insert({ clip_id: selectedClip, platform, status: 'queued' })
-      if (error) failed.push(platform)
-      else succeeded.push(platform)
-    }
-    setPublishing(false)
-    if (succeeded.length > 0) setPublished(succeeded)
-    if (failed.length > 0) {
-      setQueueError(
-        succeeded.length > 0
-          ? `Queued to ${succeeded.length} platform${succeeded.length > 1 ? 's' : ''}, but failed for: ${failed.join(', ')}`
-          : `Failed to queue — please try again`
-      )
-    }
-    // Refresh full queue history scoped to brand's clips (deduplicated by id)
-    const allClipIds = clips.map((clip: any) => clip.id)
-    if (allClipIds.length > 0) {
-      const { data: freshQ } = await supabase.from('clip_publishes')
-        .select('*, clips(title, status)').in('clip_id', allClipIds)
-        .order('created_at', { ascending: false }).limit(30)
-      setQueued(freshQ || [])
-    }
-    if (succeeded.length > 0) {
-      setTimeout(() => { setSelectedClip(null); setSelectedPlatforms([]); setPublished([]) }, 3000)
-    }
+    // Direct posting needs approved TikTok / Meta / YouTube apps; until those are connected,
+    // don't pretend to queue anything.
+    setQueueError('Direct publishing isn\'t connected yet. Download the MP4 and SRT captions from the Clips page and post them, using the AI caption shown on each clip.')
   }
+
 
   if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 size={20} className="animate-spin text-white/20" /></div>
 
