@@ -68,7 +68,7 @@ export default function VisibilityPage() {
   const runScan = async () => {
     if (!brand) return
     setScraping(true)
-    setScanStatus({ msg: `Scanning ${userPlan === 'free' ? 'Perplexity' : 'all 5 engines'}...`, type: 'info' })
+    setScanStatus({ msg: `Scanning ${userPlan === 'free' ? 'Perplexity' : 'all 5 engines'} — this can take a minute...`, type: 'info' })
     try {
       const engines = userPlan === 'free' ? ['perplexity'] : ['perplexity', 'chatgpt', 'gemini', 'grok', 'claude']
       const res = await fetch('/api/scrape', {
@@ -78,7 +78,7 @@ export default function VisibilityPage() {
       })
       const data = await res.json()
       if (data.error) { setScanStatus({ msg: data.error, type: 'error' }); return }
-      let msg = `✓ Scanned ${data.scraped} queries — ${data.mentioned} mentions (${data.mentionRate}% rate)`
+      let msg = `✓ Scanned ${data.scraped} queries — ${data.mentioned} mentions (${data.mentionRate}% rate)` + (data.failures?.length ? ' · Not run: ' + data.failures.map((f: any) => f.label + (f.notConfigured ? ' (not connected)' : ' (error)')).join(', ') : '')
       if (data.competitorStats && Object.keys(data.competitorStats).length > 0) {
         const compSummary = Object.entries(data.competitorStats as Record<string,number>)
           .map(([k, v]) => `${k}: ${v}`)

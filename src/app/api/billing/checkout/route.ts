@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { stripe, PLANS } from '@/lib/stripe'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest) {
   if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 503 })
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
   if (!customerId) {
     const customer = await stripe.customers.create({ email: user.email!, metadata: { supabase_uid: user.id } })
     customerId = customer.id
-    await supabase.from('users').upsert({ id: user.id, email: user.email!, stripe_customer_id: customerId })
+    await createAdminClient().from('users').upsert({ id: user.id, email: user.email!, stripe_customer_id: customerId })
   }
 
   const session = await stripe.checkout.sessions.create({

@@ -10,17 +10,11 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = await createClient()
-  const { data: brand } = await supabase
-    .from('brands').select('id, name').eq('share_slug', slug).single()
-
-  if (!brand) {
+  const { data: report } = await supabase.rpc('public_share_report', { p_slug: slug, p_days: 30 })
+  if (!report?.brand) {
     return new NextResponse('Brand not found', { status: 404 })
   }
-
-  const since = new Date(Date.now() - 30 * 86400000).toISOString()
-  const { data: mentions } = await supabase
-    .from('mentions').select('mentioned')
-    .eq('brand_id', brand.id).gte('scraped_at', since)
+  const mentions = (report.mentions || []) as { mentioned: boolean }[]
 
   const total = mentions?.length || 0
   const mentioned = mentions?.filter(m => m.mentioned).length || 0

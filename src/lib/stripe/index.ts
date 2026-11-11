@@ -59,7 +59,7 @@ export const PLANS = {
     priceYearly: process.env.STRIPE_PRICE_ENTERPRISE_TRIAL_YEARLY || process.env.STRIPE_PRICE_GROWTH_YEARLY || '',
     trialDays: 3,
     limits: { brands: -1, mentionsPerMonth: -1, clips: -1, agents: -1 },
-    features: ['All AI engines (ChatGPT, Perplexity, Gemini, Claude, Grok + more)', 'Unlimited tracked prompts', 'Unlimited seats', 'Prompt Volumes — real query-volume data', 'Unlimited AEO agent runs', 'SSO / SAML + SOC 2', 'Dedicated account team'],
+    features: ['All 5 AI engines (ChatGPT, Perplexity, Gemini, Claude, Grok)', 'Unlimited tracked prompts', 'Unlimited seats', 'Prompt volumes (Google search volume)', 'Unlimited AEO agent runs', 'Custom contract + invoicing', 'Dedicated account team'],
   },
 } as const
 

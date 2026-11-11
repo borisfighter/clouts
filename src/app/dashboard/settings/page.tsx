@@ -166,7 +166,7 @@ function SettingsInner() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return setSaving(false)
 
-    await supabase.from('users').upsert({ id: user.id, email: user.email! }, { onConflict: 'id' })
+    await supabase.from('users').upsert({ id: user.id, email: user.email! }, { onConflict: 'id', ignoreDuplicates: true })
 
     let saveFailed = false
     if (brandId) {

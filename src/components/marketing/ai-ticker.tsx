@@ -1,6 +1,5 @@
 const engines = [
   'ChatGPT', 'Perplexity', 'Claude', 'Gemini', 'Grok',
-  'Copilot', 'Meta AI', 'DeepSeek', 'Google AIO',
 ]
 
 export function AiTicker() {

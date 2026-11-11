@@ -11,7 +11,8 @@ const ENGINE_COLORS: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const supabase = await createClient()
-  const { data } = await supabase.from('brands').select('name, domain').eq('share_slug', params.slug).single()
+  const { data: report } = await supabase.rpc('public_share_report', { p_slug: params.slug, p_days: 1 })
+  const data = report?.brand
   if (!data) return { title: 'Report not found | Clouts' }
   
   const title = `${data.name} AI Visibility Report`
@@ -38,14 +39,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function ShareReportPage({ params }: { params: { slug: string } }) {
   const supabase = await createClient()
 
-  const { data: brand } = await supabase
-    .from('brands').select('id, name, domain, keywords, competitors').eq('share_slug', params.slug).single()
+  const { data: report } = await supabase.rpc('public_share_report', { p_slug: params.slug, p_days: 30 })
+  const brand = report?.brand as { name: string; domain: string; keywords: string[] | null; competitors: string[] | null } | undefined
   if (!brand) notFound()
-
-  const since = new Date(Date.now() - 30 * 86400000).toISOString()
-  const { data: mentions } = await supabase.from('mentions')
-    .select('engine, prompt, mentioned, sentiment, score, scraped_at, response_text')
-    .eq('brand_id', brand.id).gte('scraped_at', since).order('scraped_at', { ascending: false }).limit(500)
+  const mentions = (report?.mentions || []) as {
+    engine: string; prompt: string; mentioned: boolean; sentiment: string | null
+    score: number | null; scraped_at: string; response_text: string; cited_url: string | null
+  }[]
 
   const total = mentions?.length || 0
   const mentioned = mentions?.filter(m => m.mentioned).length || 0
